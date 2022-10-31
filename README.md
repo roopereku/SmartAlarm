@@ -1,2 +1,2 @@
 # SmartAlarm
-IoT project for school
+IoT project for school.
