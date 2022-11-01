@@ -2,20 +2,21 @@ from NodeBase import node_base
 import time
 
 class node_time(node_base):
-    def check(self):
+    def check(self, params):
         #now = time.gmtime(time.time())
 
         now = time.localtime(time.time())
-        pt = self.paramtime
-        cmp = self.params["comparison"]
+        pt = params["real"]
+        cmp = params["comparison"]
 
         # TODO Might want to check for seconds too
         if(cmp == "equal"): return now.tm_min == pt.tm_min and now.tm_hour == pt.tm_hour
         elif(cmp == "before"): return now.tm_min < pt.tm_min and now.tm_hour <= pt.tm_hour
         elif(cmp == "after"): return now.tm_min > pt.tm_min and now.tm_hour >= pt.tm_hour
 
-    def validate_params(self):
-        try: self.paramtime = time.strptime(self.params["time"], "%H:%M")
+    def validate_params(self, params):
+        try:
+            params["real"] = time.strptime(params["time"], "%H:%M")
 
         except ValueError:
             return {

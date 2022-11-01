@@ -7,40 +7,50 @@ broker_ip = "localhost"
 broker_port = 1883
 
 class node_base:
-    def __init__(self, name, delay):
-        print("Node %s" % (name))
+    def __init__(self, node_type, delay):
+        print("Node %s" % (node_type))
 
         if(len(sys.argv) == 1):
-            print("Expected ID for node %s" % (name))
+            print("Expected a name for node %s" % (nodetype))
             quit(1)
     
-        self.name = name
-        self.ID = name + ":" + sys.argv[1]
+        self.name = sys.argv[1]
+        self.node_type = node_type
+        self.ID = node_type + ":" + self.name
         self.delay = delay
-        self.params = {}
+        self.instances = [ { "ready" : False, "params" : {} } ]
 
         self.client = mqtt.Client(self.ID)
         self.client.connect(broker_ip, broker_port)
         print("%s Connected to %s:%d" % (self.ID, broker_ip, broker_port))
 
         self.client.on_message = self.__handle_message
-        self.client.subscribe("nodes/" + name)
-        print("Subscribed to nodes/" + name)
+        self.client.subscribe("nodes/" + node_type)
+        print("Subscribed to nodes/" + node_type)
 
         self.client.loop_start()
         while(True):
-            # If parameters are in place, call check()
-            if(len(self.params) == len(self.get_params_format())):
-                # TODO self.check could return more information if needed
-                message = {
-                    "result" : self.check(),
-                }
+            should_sleep = False
 
-                self.__respond(message)
+            # Loop through each instance
+            for i in range(len(self.instances)):
+                # If the instance is ready for checking, call check()
+                if(self.instances[i]["ready"]):
+                    # TODO self.check could return more information if needed
+                    message = {
+                        "result" : self.check(self.instances[i]["params"]),
+                        "instance" : i
+                    }
+
+                    should_sleep = True
+                    self.__respond(message)
+
+            # Sleep for the user specified amount
+            if(should_sleep):
                 time.sleep(delay)
 
-            # Minimize CPU usage
-            time.sleep(0.01)
+            # Minimize CPU usage but don't have a big delay
+            else: time.sleep(0.01)
 
     def __respond(self, response):
         response["from"] = self.ID
@@ -66,16 +76,26 @@ class node_base:
 
     def __handle_message(self, client, userdata, message):
         p = message.payload.decode("utf-8").split()
+        msg_id = p[0].split(":")
+
+        # Ignore the message if ID doesn't contain type, name and instance
+        if(len(msg_id) != 3):
+            return;
 
         # Only handle messages meant for this node
-        if(p[0] != self.ID):
+        if(msg_id[0] != self.node_type or msg_id[1] != self.name):
             return
+
+        # If the instance number is more than there are instances, add instances
+        instance = int(msg_id[2])
+        for i in range(len(self.instances), instance + 1):
+            self.instances.append({ "ready" : False, "params" : {} })
 
         # Delete the ID from the incoming parameters
         del p[0]
 
         params_format = self.__patched_format()
-        result = { "valid" : True, "reason" : "" }
+        result = { "valid" : True, "reason" : "", "instance" : instance }
 
         # Ignore empty messages
         if(len(p) == 0):
@@ -107,7 +127,7 @@ class node_base:
                     if(value == None):
                         value = p[i]
 
-                    self.params[params_keys[i]] = value
+                    self.instances[instance]["params"][params_keys[i]] = value
 
                     if(params_format[params_keys[i]]["strict"]):
                         matches = 0
@@ -127,12 +147,14 @@ class node_base:
 
             # If there's no error so far, validate the parameters
             if(result["valid"]):
-                res = self.validate_params()
+                res = self.validate_params(self.instances[instance]["params"])
+                self.instances[instance]["ready"] = True
                 if(res): result.update(res)
 
             # If the parameter validation failed, clear the parameters
             if(not result["valid"]):
-                self.params = {}
+                self.instances[instance]["params"] = {}
+                self.instances[instance]["ready"] = False
 
         self.__respond(result)
 

@@ -2,16 +2,17 @@ from NodeBase import node_base
 import datetime
 
 class node_day(node_base):
-    def check(self):
+    def check(self, params):
         now = datetime.datetime.today().weekday()
-        cmp = self.params["comparison"]
+        cmp = params["comparison"]
+        day = params["index"]
 
-        if(cmp == "before"): return now < self.day
-        elif(cmp == "equal"): return now == self.day
-        elif(cmp == "after"): return now > self.day
+        if(cmp == "before"): return now < day
+        elif(cmp == "equal"): return now == day
+        elif(cmp == "after"): return now > day
 
-    def validate_params(self):
-        self.day = int(self.params["day"])
+    def validate_params(self, params):
+        params["index"] = int(params["day"])
 
     def get_params_format(self):
         return {

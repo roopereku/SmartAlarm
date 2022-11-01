@@ -19,16 +19,16 @@ mqttClient.on("message", (topic, message) => {
 	{
 		//	Find the node that this message is from and see if it passef
 		node = activeNodes.find((n) => msg.from == n.ID)
-		node.passed = msg.result
+		node.instances[msg.instance].passed = msg.result
 
-		if(node.passed)
+		if(node.instances[msg.instance].passed)
 		{
 			/*	Find the nodes that are dependant on the node that sent
 			 *	the message and trigger them if all of
 			 *	their dependecies have passed */
-			forDependantNodes(msg.from, (n) => {
-				if(allDependenciesPassed(n)) {
-					console.log("trigger", n.ID)
+			forDependantInstances(node.instances[msg.instance], (i) => {
+				if(allDependenciesPassed(i)) {
+					console.log("trigger", i.parent.ID, "instance", i.num)
 				}
 			})
 		}
@@ -53,61 +53,75 @@ function requestParameters(node) {
 	})
 }
 
-function allDependenciesPassed(node) {
+function allDependenciesPassed(instance) {
 	let passed = 0
-	node.dependencies.forEach((d) => {
+	instance.dependencies.forEach((d) => {
 		passed += d.passed
 	})
 
-	console.log("(", node.ID, ") Passed", passed, "/", node.dependencies.length)
-	return passed >= node.dependencies.length
+	console.log("(", instance.parent.ID, " instance ", instance.num, ") Passed", passed, "/", instance.dependencies.length)
+	return passed >= instance.dependencies.length
 }
 
-function forDependantNodes(nodeName, callback) {
-	//	Find all the nodes that depend on nodeName
+function forDependantInstances(instance, callback) {
+	//	Find all the instances that depend on the given instance
 	activeNodes.forEach((n) => {
-		n.dependencies.forEach((d) => {
-			if(nodeName === d.ID) {
-				callback(n)
-			}
+		n.instances.forEach((i) => {
+			i.dependencies.forEach((d) => {
+				if(d === instance) {
+					callback(i)
+				}
+			})
 		})
 	})
 }
 
-function addDependency(toID, nodeID) {
+function createInstance(node) {
+	let entry = {}
+
+	entry.dependencies = [];
+	entry.passed = false;
+	entry.parent = node
+	entry.num = node.instances.length
+
+	node.instances.push(entry)
+	console.log("Created instance", entry.num, "for", node.ID)
+}
+
+function addDependency(toID, toInstace, nodeID, nodeInstance) {
 	to = activeNodes.find((n) => toID == n.ID)
 	dep = activeNodes.find((n) => nodeID == n.ID)
 
-	to.dependencies.push(dep)
-	console.log(to.ID, "now depends on", dep.ID)
+	to.instances[toInstace].dependencies.push(dep.instances[nodeInstance])
+	console.log(to.ID, " instance ", toInstace, " now depends on ", dep.ID, " instance ", nodeInstance)
 }
 
-function startBuiltinNode(name, ID, isInput) {
-	const nodeName = builtinNodes.find((s) => s === name);
+function startBuiltinNode(type, name, isInput) {
+	const nodeType = builtinNodes.find((s) => s === type);
 
-    if(nodeName == undefined)
-        return false;
+    if(nodeType == undefined)
+        return undefined;
 
     const builtinRoot = __dirname + "/../nodes/builtin/";
-    const nodePath = builtinRoot + "Node" + capitalizeFirstLetter(nodeName) + ".py";
-    console.log(nodePath + " ID " + ID);
+    const nodePath = builtinRoot + "Node" + capitalizeFirstLetter(nodeType) + ".py";
+    console.log(nodePath + " Name " + name);
 
 	entry = {};
-    entry.process = spawn("python3", [ nodePath, ID ]);
-	entry.dependencies = [];
+    entry.process = spawn("python3", [ nodePath, name ]);
+	entry.instances = []
 	entry.builtin = true;
-	entry.passed = false;
 	entry.name = name;
-	entry.ID = name + ":" + ID;
+	entry.ID = nodeType + ":" + name;
 
+	createInstance(entry)
 	activeNodes.push(entry);
 
-	return true;
+	return entry;
 }
 
-app.get("/input/:name/:id", (req, res) => {
-	if(!startBuiltinNode(req.params.name, req.params.id, true)) {
-		res.send("Invalid name");
+app.get("/input/:builtintype/:name", (req, res) => {
+	if(startBuiltinNode(req.params.builtintype, req.params.name, true) === undefined) {
+		res.send("Invalid node type");
 		return;
 	}
 
@@ -119,14 +133,12 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-	startBuiltinNode("time", 1);
-	startBuiltinNode("time", 11);
+	let t = startBuiltinNode("time", 1);
+	createInstance(t)
 
-	startBuiltinNode("time", 2);
 	startBuiltinNode("day", 1);
 
-	addDependency("day:1", "time:1")
-
-	addDependency("time:2", "time:1")
-	addDependency("time:2", "time:11")
+	addDependency("day:1", 0, "time:1", 0)
+	addDependency("day:1", 0, "time:1", 1)
+	//addDependency("time:2", "time:11")
 })
