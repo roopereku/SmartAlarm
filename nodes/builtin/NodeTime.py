@@ -3,16 +3,19 @@ import time
 
 class node_test(node_base):
     def check(self):
-        now = time.gmtime(time.time())
-        cmp = self.params["comparison"]
-        trigger = False
+        #now = time.gmtime(time.time())
 
-        #if(cmp == "equal"): trigger = now.tm_min == pt.tm_min and now.tm_hour == pt.tm_hour
-        #elif(cmp == "before"): trigger = now.tm_min < pt.tm_min and now.tm_hour < pt.tm_hour
-        #elif(cmp == "after"): trigger = now.tm_min > pt.tm_min and now.tm_hour > pt.tm_hour
+        now = time.localtime(time.time())
+        pt = self.paramtime
+        cmp = self.params["comparison"]
+
+        # TODO Might want to check for seconds too
+        if(cmp == "equal"): return now.tm_min == pt.tm_min and now.tm_hour == pt.tm_hour
+        elif(cmp == "before"): return now.tm_min < pt.tm_min and now.tm_hour <= pt.tm_hour
+        elif(cmp == "after"): return now.tm_min > pt.tm_min and now.tm_hour >= pt.tm_hour
 
     def validate_params(self):
-        try: self.pt = time.strptime(self.params["time"], "%H:%M")
+        try: self.paramtime = time.strptime(self.params["time"], "%H:%M")
 
         except ValueError:
             return {

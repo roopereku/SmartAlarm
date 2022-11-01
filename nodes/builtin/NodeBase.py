@@ -31,15 +31,12 @@ class node_base:
         while(True):
             # If parameters are in place, call check()
             if(len(self.params) == len(self.get_params_format())):
-                preset = {
-                    "trigger" : False,
+                # TODO self.check could return more information if needed
+                message = {
+                    "result" : self.check(),
                 }
 
-                result = self.check()
-                if(result):
-                    preset.update(result)
-
-                self.__respond(preset)
+                self.__respond(message)
                 time.sleep(delay)
 
             # Minimize CPU usage
@@ -106,7 +103,6 @@ class node_base:
                         value = p[i]
 
                     self.params[params_keys[i]] = value
-                    print("parameter %s = {}" % (params_keys[i]), value)
 
                     if(params_format[params_keys[i]]["strict"]):
                         matches = 0
