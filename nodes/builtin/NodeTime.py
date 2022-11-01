@@ -22,7 +22,10 @@ class node_test(node_base):
 
     def get_params_format(self):
         return {
-            "time" : { "type" : "string" },
+            "time" : {
+                "type" : "string",
+                "default" : "12:00"
+            },
 
             "comparison" : {
                 "type" : "string",

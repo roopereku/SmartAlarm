@@ -59,17 +59,11 @@ class node_base:
         fmt = self.get_params_format()
         result = {}
 
+        # Complete each field of the format if they're missing some field in preset
         for i in fmt:
-            result[i] = format_preset
+            result[i] = format_preset.copy()
             result[i].update(fmt[i])
 
-        for i in result:
-            print(i)
-            # FIXME "time" has hints when it shouldn't
-            print(result[i])
-
-        print("patched")
-        print(result)
         return result
 
     def __handle_message(self, client, userdata, message):
@@ -82,12 +76,12 @@ class node_base:
         # Delete the ID from the incoming parameters
         del p[0]
 
-        params_format = self.get_params_format()
+        params_format = self.__patched_format()
         result = { "valid" : True, "reason" : "" }
 
         # Is the server asking for the parameters format
         if(p[0] == "paramsformat"):
-            result["format"] = self.__patched_format()
+            result["format"] = params_format
 
         # Does the the parameter count match
         elif(len(p) != len(params_format)):
@@ -114,25 +108,30 @@ class node_base:
                     self.params[params_keys[i]] = value
                     print("parameter %s = {}" % (params_keys[i]), value)
 
-                    print(params_format[params_keys[i]])
-                    #if(params_format[params_keys[i]]["strict"]):
-                    #    print("strict" + params_keys[i])
+                    if(params_format[params_keys[i]]["strict"]):
+                        matches = 0
+                        for h in params_format[params_keys[i]]["hint"]:
+                            matches += p[i] == h
+
+                        if(matches == 0):
+                            result["reason"] = "Parameter '%s' doesn't match hints" % (params_keys[i])
+                            result["valid"] = False
+                            break
 
                 # The type of the parameter is invalid
                 except ValueError:
                     result["reason"] = "Parameter '%s' should be of type '%s'" % (params_keys[i], typename)
                     result["valid"] = False
-
                     break
 
+            # If there's no error so far, validate the parameters
             if(result["valid"]):
-                result["value"] = {
-                    "valid": True,
-                    "reason": ""
-                }
-
                 res = self.validate_params()
-                if(res): result["value"].update(res)
+                if(res): result.update(res)
+
+            # If the parameter validation failed, clear the parameters
+            if(not result["valid"]):
+                self.params = {}
 
         self.__respond(result)
 
