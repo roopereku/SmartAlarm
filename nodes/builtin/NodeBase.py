@@ -14,9 +14,9 @@ class node_base:
             print("Expected ID for node %s" % (name))
             quit(1)
     
+        self.name = name
         self.ID = name + ":" + sys.argv[1]
         self.delay = delay
-        self.name = name
         self.params = {}
 
         self.client = mqtt.Client(self.ID)
@@ -43,6 +43,7 @@ class node_base:
             time.sleep(0.01)
 
     def __respond(self, response):
+        response["from"] = self.ID
         self.client.publish("noderesult", json.dumps(response))
 
     def __patched_format(self):
@@ -76,14 +77,18 @@ class node_base:
         params_format = self.__patched_format()
         result = { "valid" : True, "reason" : "" }
 
-        # Does the the parameter count match
-        if(len(p) != len(params_format)):
-            result["reason"] = "Number of parameters should be %d" % (len(params_format))
-            result["valid"] = False
+        # Ignore empty messages
+        if(len(p) == 0):
+            return
 
         # Is the server asking for the parameters format
         elif(p[0] == "paramsformat"):
             result["format"] = params_format
+
+        # Does the the parameter count match
+        elif(len(p) != len(params_format)):
+            result["reason"] = "Number of parameters should be %d" % (len(params_format))
+            result["valid"] = False
 
         else:
             # What keys are in params_format
