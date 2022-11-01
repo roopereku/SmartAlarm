@@ -1,17 +1,14 @@
 from NodeBase import node_base
 
 class node_test(node_base):
-    def check(self, params):
-
-        if(params[0] == "1"):
-            return True
-
-        else: return False
+    def check(self):
+        print("moi")
 
     def get_params_format(self):
         return {
-            "testparam1" : "int",
-            "testparam2" : "string",
+            "testparam1" : {
+                "type": "int",
+            }
         }
 
-node = node_test("test")
+node = node_test("test", 1)
