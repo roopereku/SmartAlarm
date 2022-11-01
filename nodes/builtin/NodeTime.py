@@ -1,7 +1,7 @@
 from NodeBase import node_base
 import time
 
-class node_test(node_base):
+class node_time(node_base):
     def check(self):
         #now = time.gmtime(time.time())
 
@@ -41,4 +41,4 @@ class node_test(node_base):
             }
         }
 
-node = node_test("time", 1)
+node = node_time("time", 1)

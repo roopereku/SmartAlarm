@@ -76,14 +76,14 @@ class node_base:
         params_format = self.__patched_format()
         result = { "valid" : True, "reason" : "" }
 
-        # Is the server asking for the parameters format
-        if(p[0] == "paramsformat"):
-            result["format"] = params_format
-
         # Does the the parameter count match
-        elif(len(p) != len(params_format)):
+        if(len(p) != len(params_format)):
             result["reason"] = "Number of parameters should be %d" % (len(params_format))
             result["valid"] = False
+
+        # Is the server asking for the parameters format
+        elif(p[0] == "paramsformat"):
+            result["format"] = params_format
 
         else:
             # What keys are in params_format
