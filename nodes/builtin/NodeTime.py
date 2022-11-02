@@ -11,8 +11,8 @@ class node_time(node_base):
 
         # TODO Might want to check for seconds too
         if(cmp == "equal"): return now.tm_min == pt.tm_min and now.tm_hour == pt.tm_hour
-        elif(cmp == "before"): return now.tm_min < pt.tm_min and now.tm_hour <= pt.tm_hour
-        elif(cmp == "after"): return now.tm_min > pt.tm_min and now.tm_hour >= pt.tm_hour
+        elif(cmp == "before"): return now.tm_hour <= pt.tm_hour and now.tm_min < pt.tm_min
+        elif(cmp == "after"): return now.tm_hour >= pt.tm_hour and now.tm_min > pt.tm_min
 
     def validate_params(self, params):
         try:
