@@ -21,17 +21,7 @@ mqttClient.on("message", (topic, message) => {
 		node = activeNodes.find((n) => msg.from == n.ID)
 		node.instances[msg.instance].passed = msg.result
 
-		if(node.instances[msg.instance].passed)
-		{
-			/*	Find the nodes that are dependant on the node that sent
-			 *	the message and trigger them if all of
-			 *	their dependecies have passed */
-			forDependantInstances(node.instances[msg.instance], (i) => {
-				if(allDependenciesPassed(i)) {
-					console.log("trigger", i.parent.ID, "instance", i.num)
-				}
-			})
-		}
+		trigger(node.instances[msg.instance])
 	}
 })
 
@@ -41,6 +31,23 @@ const builtinNodes = [
 ]
 
 let activeNodes = []
+
+function trigger(instance)
+{
+	//	TODO support other node types than sensors
+	if(instance.passed && allDependenciesPassed(instance))
+	{
+		/*	Find the nodes that are dependant on the node that sent
+		 *	the message and trigger them if all of
+		 *	their dependecies have passed */
+		forDependantInstances(instance, (i) => {
+			if(allDependenciesPassed(i)) {
+				console.log("trigger", i.parent.ID, "instance", i.num)
+				trigger(i)
+			}
+		})
+	}
+}
 
 function capitalizeFirstLetter(string) {
 	return string.charAt(0).toUpperCase() + string.slice(1);
@@ -138,7 +145,6 @@ app.listen(port, () => {
 
 	startBuiltinNode("day", 1);
 
-	addDependency("day:1", 0, "time:1", 0)
-	addDependency("day:1", 0, "time:1", 1)
-	//addDependency("time:2", "time:11")
+	addDependency("time:1", 1, "time:1", 0)  
+	addDependency("day:1", 0, "time:1", 1)  
 })
