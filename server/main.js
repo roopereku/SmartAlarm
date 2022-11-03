@@ -27,6 +27,17 @@ mqttClient.on("message", (topic, message) => {
 
 		trigger(node.instances[msg.instance])
 	}
+
+	//	If the message tells if the node is a sensor, it also contains the parameter format
+	if(msg.sensor !== undefined)
+	{
+		let node = activeNodes.find((n) => msg.from == n.ID);
+		if(node.isSensor === undefined)
+		{
+			node.isSensor = msg.sensor;
+			node.paramFormat = msg.format;
+		}
+	}
 })
 
 const httpServer = http.createServer(app).listen(3001)
@@ -66,15 +77,14 @@ ws.on("connection", (c) => {
 
 const builtinNodes = [
     "day",
-    "time"
+    "time",
+    "test"
 ]
 
 let activeNodes = []
 
 function trigger(instance)
 {
-	//	TODO support other node types than sensors
-
 	let passed = allDependenciesPassed(instance)
 
 	/*	Since it's guaranteed that the nodes send their state
@@ -92,10 +102,18 @@ function trigger(instance)
 
 		/*	Call trigger recursively so that an instance won't
 		 *	display as passed if even one of the dependencies hasn't passed */
-		trigger(i, passed)
+		trigger(i)
 
 		if(allDependenciesPassed(i)) {
 			console.log("trigger", i.parent.ID, "instance", i.num)
+			if(!i.parent.isSensor)
+				console.log("activate", i.parent.ID, "instance", i.num);
+		}
+
+		else
+		{
+			if(!i.parent.isSensor)
+				console.log("deactivate", i.parent.ID, "instance", i.num);
 		}
 	})
 }
@@ -104,15 +122,15 @@ function capitalizeFirstLetter(string) {
 	return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function requestParameters(node) {
-	mqttClient.publish("nodes/" + node.name, node.id + " info", {}, (error) => {
+function requestInfo(node) {
+	mqttClient.publish(node.topic, node.ID + ":0 info", {}, (error) => {
 		if(error)
 			console.log(error)
 	})
 }
 
 function allDependenciesPassed(instance) {
-	if(!instance.passed)
+	if(instance.parent.isSensor && !instance.passed)
 		return false
 
 	let passed = 0
@@ -138,6 +156,7 @@ function forDependantInstances(instance, callback) {
 }
 
 function createInstance(node) {
+	requestInfo(node);
 	let entry = {}
 
 	entry.dependencies = [];
@@ -174,14 +193,13 @@ function startBuiltinNode(type, name, isInput) {
 
 	entry = {};
     entry.process = spawn("python3", [ nodePath, name ]);
-	entry.instances = []
+	entry.instances = [];
 	entry.builtin = true;
 	entry.name = name;
+	entry.topic = "nodes/" + nodeType;
 	entry.ID = nodeType + ":" + name;
 
-	//createInstance(entry)
 	activeNodes.push(entry);
-
 	return entry;
 }
 
@@ -203,6 +221,7 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
+	startBuiltinNode("test", 1);
 	startBuiltinNode("time", 1);
 	startBuiltinNode("day", 1);
 })
