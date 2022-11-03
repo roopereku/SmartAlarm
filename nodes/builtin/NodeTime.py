@@ -42,4 +42,4 @@ class node_time(node_base):
             }
         }
 
-node = node_time("time", 1)
+node = node_time("time", 1, True)

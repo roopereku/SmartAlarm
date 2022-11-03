@@ -7,7 +7,7 @@ broker_ip = "localhost"
 broker_port = 1883
 
 class node_base:
-    def __init__(self, node_type, delay):
+    def __init__(self, node_type, delay, is_sensor):
         print("Node %s" % (node_type))
 
         if(len(sys.argv) == 1):
@@ -17,6 +17,7 @@ class node_base:
         self.name = sys.argv[1]
         self.node_type = node_type
         self.ID = node_type + ":" + self.name
+        self.is_sensor = is_sensor
         self.delay = delay
         self.instances = [ { "ready" : False, "params" : {}, "lastResult": False } ]
 
@@ -31,6 +32,11 @@ class node_base:
         self.client.loop_start()
         while(True):
             should_sleep = False
+
+            # Only sensors call check and send messages
+            if(not self.is_sensor):
+                time.sleep(0.01)
+                continue
 
             # Loop through each instance
             for i in range(len(self.instances)):
@@ -56,6 +62,19 @@ class node_base:
 
             # Minimize CPU usage but don't have a big delay
             else: time.sleep(0.01)
+
+    def __handle_activate(self, instance, value):
+        # If the node is already in the given state, do nothing
+        if("activated" in self.instances[instance] and
+           self.instances[instance]["activated"] == value):
+            return
+
+        # Update the state
+        self.instances[instance]["activated"] = value
+
+        # Activate or deactivate
+        if(value): self.activate(self.instances[instance]["params"])
+        else: self.deactivate(self.instances[instance]["params"])
 
     def __respond(self, response):
         response["from"] = self.ID
@@ -110,6 +129,13 @@ class node_base:
         elif(p[0] == "paramsformat"):
             result["format"] = params_format
 
+        # Is the first parameter "activate" and is this node a sensor
+        elif(p[0] == "activate" and not self.is_sensor):
+            self.__handle_activate(instance, True)
+
+        elif(p[0] == "deactivate" and not self.is_sensor):
+            self.__handle_activate(instance, False)
+
         # Does the the parameter count match
         elif(len(p) != len(params_format)):
             result["reason"] = "Number of parameters should be %d" % (len(params_format))
@@ -162,9 +188,19 @@ class node_base:
                 self.instances[instance]["ready"] = False
                 self.instances[instance]["lastResult"] = False
 
+                # If the parameters of a non-sensor are invalid, might aswell deactivate the instance
+                if(not self.is_sensor):
+                    self.__handle_activate(instance, False)
+
         self.__respond(result)
 
     def check(self, params):
+        raise NotImplementedError()
+
+    def activate(self, params):
+        raise NotImplementedError()
+
+    def deactivate(self, params):
         raise NotImplementedError()
 
     def validate_params(self, params):
