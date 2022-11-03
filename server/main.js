@@ -71,26 +71,37 @@ const builtinNodes = [
 
 let activeNodes = []
 
-function trigger(instance)
+function trigger(instance, topState = undefined)
 {
 	//	TODO support other node types than sensors
-	if(instance.passed && allDependenciesPassed(instance))
-	{
-		sendToAll({
-			cmd: "trigger",
-			arg: [ instance.parent.ID + ":" + instance.num.toString() ]
-		})
+	let passed
 
-		/*	Find the nodes that are dependant on the node that sent
-		 *	the message and trigger them if all of
-		 *	their dependecies have passed */
-		forDependantInstances(instance, (i) => {
-			if(allDependenciesPassed(i)) {
-				console.log("trigger", i.parent.ID, "instance", i.num)
-				trigger(i)
-			}
-		})
-	}
+	if(topState === undefined)
+		passed = instance.passed && allDependenciesPassed(instance)
+
+	else passed = topState
+
+	/*	Since it's guaranteed that the nodes send their state
+	 *	only when it changes, it should be fine to send the state
+	 *	to each client every time that there is a state change */
+	sendToAll({
+		cmd: "passed",
+		arg: [ instance.parent.ID + ":" + instance.num.toString(), passed ]
+	})
+
+	/*	Find the nodes that are dependant on the node that sent
+	 *	the message and trigger them if all of
+	 *	their dependecies have passed */
+	forDependantInstances(instance, (i) => {
+
+		/*	Call trigger recursively so that an instance won't
+		 *	display as passed if even one of the dependencies hasn't passed */
+		trigger(i, passed)
+
+		if(passed && allDependenciesPassed(i)) {
+			console.log("trigger", i.parent.ID, "instance", i.num)
+		}
+	})
 }
 
 function capitalizeFirstLetter(string) {
@@ -147,6 +158,9 @@ function addDependency(toID, toInstace, nodeID, nodeInstance) {
 
 	to.instances[toInstace].dependencies.push(dep.instances[nodeInstance])
 	console.log(to.ID, " instance ", toInstace, " now depends on ", dep.ID, " instance ", nodeInstance)
+
+	//	Immediately notify about possible state changes
+	trigger(dep.instances[nodeInstance])
 }
 
 function startBuiltinNode(type, name, isInput) {

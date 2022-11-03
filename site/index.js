@@ -22,10 +22,10 @@ ws.addEventListener('message', (event) => {
 		target.appendChild(document.createTextNode(msg.arg[2] + ":" + msg.arg[3].toString()));
 	}
 
-	if(msg.cmd == "trigger")
+	if(msg.cmd == "passed")
 	{
 		const target = document.getElementById(msg.arg[0])
-		target.style.backgroundColor = "green";
+		target.style.backgroundColor = msg.arg[1] ? "green" : "red";
 	}
 });
 
@@ -70,11 +70,3 @@ addDay.onclick = () => {
 		arg: [ "day:1" ]
 	})
 }
-
-function resetBackgrounds()
-{
-	for(let i = 0; i < instances.children.length; i++)
-		instances.children[i].style.backgroundColor = "red"
-}
-
-setInterval(resetBackgrounds, 1000)
