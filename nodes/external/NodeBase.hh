@@ -11,7 +11,7 @@
 class NodeBase
 {
 public:
-	NodeBase(const char* nodeType, const char* name, unsigned delay);
+	NodeBase(const char* nodeType, const char* name, unsigned delay, bool isSensor);
 
 	virtual bool check(Params& params) = 0;
 	virtual void setParamFormat(ParamInfo& params) = 0;
@@ -37,6 +37,7 @@ private:
 	ParamInfo paramFormat;
 	std::vector <Instance> instances;
 
+	bool isSensor;
 	unsigned delay;
 
 protected:

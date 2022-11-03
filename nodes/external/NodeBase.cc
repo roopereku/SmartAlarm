@@ -1,7 +1,7 @@
 #include "NodeBase.hh"
 
-NodeBase::NodeBase(const char* nodeType, const char* name, unsigned delay)
-	: type(nodeType), name(name), ID(std::string(nodeType) + ":" + name), delay(delay)
+NodeBase::NodeBase(const char* nodeType, const char* name, unsigned delay, bool isSensor)
+	: type(nodeType), name(name), ID(std::string(nodeType) + ":" + name), delay(delay), isSensor(isSensor)
 {
 }
 
@@ -36,7 +36,7 @@ void NodeBase::handleMessage(const std::string& message)
 		printf("param '%s'\n", p[i].c_str());
 	}
 
-	if(p[1] == "paramsformat")
+	if(p[1] == "info")
 	{
 		respondFormat();
 		return;
@@ -50,7 +50,7 @@ void NodeBase::respondFormat()
 		formatJSON += entry.first + ": " + entry.second.toJSON() + ",";
 
 	formatJSON.pop_back();
-	std::string json =	"{valid: true, reason: \"\", format: {" + formatJSON + "}, from: \"" + ID + "\"}";
+	std::string json =	"{valid: true, reason: \"\", format: {" + formatJSON + "}, sensor: " + (isSensor ? "true" : "false") + ", from: \"" + ID + "\"}";
 
 	respond(json);
 }

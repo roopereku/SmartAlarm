@@ -125,9 +125,10 @@ class node_base:
         if(len(p) == 0):
             return
 
-        # Is the server asking for the parameters format
-        elif(p[0] == "paramsformat"):
+        # Is the server asking for information about this node
+        elif(p[0] == "info"):
             result["format"] = params_format
+            result["sensor"] = self.is_sensor
 
         # Is the first parameter "activate" and is this node a sensor
         elif(p[0] == "activate" and not self.is_sensor):

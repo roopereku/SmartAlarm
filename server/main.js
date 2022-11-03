@@ -105,7 +105,7 @@ function capitalizeFirstLetter(string) {
 }
 
 function requestParameters(node) {
-	mqttClient.publish("nodes/" + node.name, node.id + " paramsformat", {}, (error) => {
+	mqttClient.publish("nodes/" + node.name, node.id + " info", {}, (error) => {
 		if(error)
 			console.log(error)
 	})

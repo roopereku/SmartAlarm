@@ -3,7 +3,7 @@
 class NodeTest : public NodeBase
 {
 public:
-	NodeTest(const char* name) : NodeBase("test", name, 1)
+	NodeTest(const char* name) : NodeBase("test", name, 1, true)
 	{
 	}
 
