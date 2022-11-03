@@ -71,15 +71,11 @@ const builtinNodes = [
 
 let activeNodes = []
 
-function trigger(instance, topState = undefined)
+function trigger(instance)
 {
 	//	TODO support other node types than sensors
-	let passed
 
-	if(topState === undefined)
-		passed = instance.passed && allDependenciesPassed(instance)
-
-	else passed = topState
+	let passed = allDependenciesPassed(instance)
 
 	/*	Since it's guaranteed that the nodes send their state
 	 *	only when it changes, it should be fine to send the state
@@ -98,7 +94,7 @@ function trigger(instance, topState = undefined)
 		 *	display as passed if even one of the dependencies hasn't passed */
 		trigger(i, passed)
 
-		if(passed && allDependenciesPassed(i)) {
+		if(allDependenciesPassed(i)) {
 			console.log("trigger", i.parent.ID, "instance", i.num)
 		}
 	})
@@ -116,9 +112,12 @@ function requestParameters(node) {
 }
 
 function allDependenciesPassed(instance) {
+	if(!instance.passed)
+		return false
+
 	let passed = 0
 	instance.dependencies.forEach((d) => {
-		passed += d.passed
+		passed += allDependenciesPassed(d)
 	})
 
 	console.log("(", instance.parent.ID, " instance ", instance.num, ") Passed", passed, "/", instance.dependencies.length)
