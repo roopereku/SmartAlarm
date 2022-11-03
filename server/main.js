@@ -1,10 +1,14 @@
 const spawn = require("child_process").spawn
 const express = require('express')
 const mqtt = require('mqtt')
+const http = require('http')
+const webSocket = require('ws')
 
 const port = 3000
 const app = express()
 const mqttClient = mqtt.connect("mqtt://localhost:1883", { clientId: "server" });
+
+app.use(express.static(__dirname + "/../site/"))
 
 mqttClient.on("connect", () => {
 	console.log("MQTT connected");
@@ -25,6 +29,41 @@ mqttClient.on("message", (topic, message) => {
 	}
 })
 
+const httpServer = http.createServer(app).listen(3001)
+const ws = new webSocket.Server({ server: httpServer })
+
+function sendToAll(json)
+{
+	ws.clients.forEach((client) => {
+		client.send(JSON.stringify(json));
+	})
+}
+
+ws.on("connection", (c) => {
+	c.on("message", (payload) => {
+		const msg = JSON.parse(payload.toString())
+		console.log(msg)
+
+		if(msg.cmd == "instance")
+		{
+			const ID = msg.arg[0]
+			node = activeNodes.find((n) => ID == n.ID);
+
+			if(node === undefined)
+				msg.error = true
+
+			else msg.result = createInstance(node)
+		}
+
+		if(msg.cmd == "dependency")
+		{
+			addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+		}
+
+		sendToAll(msg);
+	})
+})
+
 const builtinNodes = [
     "day",
     "time"
@@ -37,6 +76,11 @@ function trigger(instance)
 	//	TODO support other node types than sensors
 	if(instance.passed && allDependenciesPassed(instance))
 	{
+		sendToAll({
+			cmd: "trigger",
+			arg: [ instance.parent.ID + ":" + instance.num.toString() ]
+		})
+
 		/*	Find the nodes that are dependant on the node that sent
 		 *	the message and trigger them if all of
 		 *	their dependecies have passed */
@@ -93,6 +137,8 @@ function createInstance(node) {
 
 	node.instances.push(entry)
 	console.log("Created instance", entry.num, "for", node.ID)
+
+	return entry.num
 }
 
 function addDependency(toID, toInstace, nodeID, nodeInstance) {
@@ -120,31 +166,30 @@ function startBuiltinNode(type, name, isInput) {
 	entry.name = name;
 	entry.ID = nodeType + ":" + name;
 
-	createInstance(entry)
+	//createInstance(entry)
 	activeNodes.push(entry);
 
 	return entry;
 }
 
-app.get("/input/:builtintype/:name", (req, res) => {
-	if(startBuiltinNode(req.params.builtintype, req.params.name, true) === undefined) {
-		res.send("Invalid node type");
+app.get("/add/:builtintype/:name", (req, res) => {
+	const ID = req.params.builtintype + ":" + req.params.name;
+	node = activeNodes.find((n) => ID == n.ID)
+
+	if(node === undefined)
+	{
+		res.send("No node called " + ID);
 		return;
 	}
 
-	res.redirect("/");
+	res.send(createInstance(node).toString());
 })
 
 app.get('/', (req, res) => {
-    res.send('Hello World!')
+    res.sendFile(__dirname + "/../site/index.html")
 })
 
 app.listen(port, () => {
-	let t = startBuiltinNode("time", 1);
-	createInstance(t)
-
+	startBuiltinNode("time", 1);
 	startBuiltinNode("day", 1);
-
-	addDependency("time:1", 1, "time:1", 0)  
-	addDependency("day:1", 0, "time:1", 1)  
 })
