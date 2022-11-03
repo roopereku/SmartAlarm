@@ -18,7 +18,7 @@ class node_base:
         self.node_type = node_type
         self.ID = node_type + ":" + self.name
         self.delay = delay
-        self.instances = [ { "ready" : False, "params" : {} } ]
+        self.instances = [ { "ready" : False, "params" : {}, "lastResult": False } ]
 
         self.client = mqtt.Client(self.ID)
         self.client.connect(broker_ip, broker_port)
@@ -36,14 +36,19 @@ class node_base:
             for i in range(len(self.instances)):
                 # If the instance is ready for checking, call check()
                 if(self.instances[i]["ready"]):
-                    # TODO self.check could return more information if needed
-                    message = {
-                        "result" : self.check(self.instances[i]["params"]),
-                        "instance" : i
-                    }
+                    result = self.check(self.instances[i]["params"])
 
-                    should_sleep = True
-                    self.__respond(message)
+                    # Only send messages if the value differs to minimize traffic
+                    if(result != self.instances[i]["lastResult"]):
+                        message = {
+                            "result" : result,
+                            "instance" : i
+                        }
+
+                        should_sleep = True
+                        self.__respond(message)
+
+                    self.instances[i]["lastResult"] = result
 
             # Sleep for the user specified amount
             if(should_sleep):
@@ -89,7 +94,7 @@ class node_base:
         # If the instance number is more than there are instances, add instances
         instance = int(msg_id[2])
         for i in range(len(self.instances), instance + 1):
-            self.instances.append({ "ready" : False, "params" : {} })
+            self.instances.append({ "ready" : False, "params" : {}, "lastResult": False })
 
         # Delete the ID from the incoming parameters
         del p[0]
@@ -155,6 +160,7 @@ class node_base:
             if(not result["valid"]):
                 self.instances[instance]["params"] = {}
                 self.instances[instance]["ready"] = False
+                self.instances[instance]["lastResult"] = False
 
         self.__respond(result)
 
