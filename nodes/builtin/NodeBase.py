@@ -64,9 +64,11 @@ class node_base:
             else: time.sleep(0.01)
 
     def __handle_activate(self, instance, value):
+        if(not "activated" in self.instances[instance]):
+            self.instances[instance]["activated"] = False
+
         # If the node is already in the given state, do nothing
-        if("activated" in self.instances[instance] and
-           self.instances[instance]["activated"] == value):
+        if(self.instances[instance]["activated"] == value):
             return
 
         # Update the state
