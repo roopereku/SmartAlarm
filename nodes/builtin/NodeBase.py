@@ -19,7 +19,12 @@ class node_base:
         self.ID = node_type + ":" + self.name
         self.is_sensor = is_sensor
         self.delay = delay
-        self.instances = [ { "ready" : False, "params" : {}, "lastResult": False } ]
+
+        # If the node takes no parameters, it's ready by default
+        self.defaultReady = len(self.get_params_format()) == 0
+        self.instances = [ { "ready" : self.defaultReady, "params" : {}, "lastResult": False } ]
+
+        print("Default ready", self.defaultReady)
 
         self.client = mqtt.Client(self.ID)
         self.client.connect(broker_ip, broker_port)
@@ -28,6 +33,11 @@ class node_base:
         self.client.on_message = self.__handle_message
         self.client.subscribe("nodes/" + node_type)
         print("Subscribed to nodes/" + node_type)
+
+        self.__respond({
+            "format": self.__patched_format(),
+            "sensor": self.is_sensor
+        })
 
         self.client.loop_start()
         while(True):
@@ -71,12 +81,24 @@ class node_base:
         if(self.instances[instance]["activated"] == value):
             return
 
+        # Are the parameters set?
+        if(not self.instances[instance]["ready"]):
+            # TODO return a status indicating error
+            return
+
         # Update the state
         self.instances[instance]["activated"] = value
 
         # Activate or deactivate
         if(value): self.activate(self.instances[instance]["params"])
         else: self.deactivate(self.instances[instance]["params"])
+
+        message = {
+            "result" : value,
+            "instance" : instance
+        }
+
+        self.__respond(message)
 
     def __respond(self, response):
         response["from"] = self.ID
@@ -115,7 +137,7 @@ class node_base:
         # If the instance number is more than there are instances, add instances
         instance = int(msg_id[2])
         for i in range(len(self.instances), instance + 1):
-            self.instances.append({ "ready" : False, "params" : {}, "lastResult": False })
+            self.instances.append({ "ready" : self.defaultReady, "params" : {}, "lastResult": False })
 
         # Delete the ID from the incoming parameters
         del p[0]
@@ -126,11 +148,6 @@ class node_base:
         # Ignore empty messages
         if(len(p) == 0):
             return
-
-        # Is the server asking for information about this node
-        elif(p[0] == "info"):
-            result["format"] = params_format
-            result["sensor"] = self.is_sensor
 
         # Is the first parameter "activate" and is this node a sensor
         elif(p[0] == "activate" and not self.is_sensor):
@@ -145,6 +162,10 @@ class node_base:
             result["valid"] = False
 
         else:
+
+            # If new parameters are being set, call deactivate with the old parameters
+            self.__handle_activate(instance, False)
+
             # What keys are in params_format
             params_keys = list(params_format)
 
@@ -190,10 +211,6 @@ class node_base:
                 self.instances[instance]["params"] = {}
                 self.instances[instance]["ready"] = False
                 self.instances[instance]["lastResult"] = False
-
-                # If the parameters of a non-sensor are invalid, might aswell deactivate the instance
-                if(not self.is_sensor):
-                    self.__handle_activate(instance, False)
 
         self.__respond(result)
 

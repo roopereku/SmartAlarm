@@ -18,16 +18,6 @@ mqttClient.on("connect", () => {
 mqttClient.on("message", (topic, message) => {
 	const msg = JSON.parse(message.toString())
 
-	//	Is result present
-	if(msg.result !== undefined)
-	{
-		//	Find the node that this message is from and see if it passef
-		node = activeNodes.find((n) => msg.from == n.ID)
-		node.instances[msg.instance].passed = msg.result
-
-		trigger(node.instances[msg.instance])
-	}
-
 	//	If the message tells if the node is a sensor, it also contains the parameter format
 	if(msg.sensor !== undefined)
 	{
@@ -37,6 +27,16 @@ mqttClient.on("message", (topic, message) => {
 			node.isSensor = msg.sensor;
 			node.paramFormat = msg.format;
 		}
+	}
+
+	//	Is result present
+	if(msg.result !== undefined)
+	{
+		//	Find the node that this message is from and see if it passef
+		node = activeNodes.find((n) => msg.from == n.ID)
+		node.instances[msg.instance].passed = msg.result
+
+		trigger(node.instances[msg.instance])
 	}
 })
 
@@ -106,13 +106,16 @@ function trigger(instance)
 
 		if(allDependenciesPassed(i)) {
 			console.log("trigger", i.parent.ID, "instance", i.num)
+
 			if(!i.parent.isSensor)
+				//	TODO Send a message to the node that tells it to activate
 				console.log("activate", i.parent.ID, "instance", i.num);
 		}
 
 		else
 		{
 			if(!i.parent.isSensor)
+				//	TODO Send a message to the node that tells it to deactivate
 				console.log("deactivate", i.parent.ID, "instance", i.num);
 		}
 	})
@@ -122,24 +125,14 @@ function capitalizeFirstLetter(string) {
 	return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function requestInfo(node) {
-	mqttClient.publish(node.topic, node.ID + ":0 info", {}, (error) => {
-		if(error)
-			console.log(error)
-	})
-}
-
 function allDependenciesPassed(instance) {
-	if(instance.parent.isSensor && !instance.passed)
-		return false
-
 	let passed = 0
 	instance.dependencies.forEach((d) => {
 		passed += allDependenciesPassed(d)
 	})
 
 	console.log("(", instance.parent.ID, " instance ", instance.num, ") Passed", passed, "/", instance.dependencies.length)
-	return passed >= instance.dependencies.length
+	return instance.passed && passed >= instance.dependencies.length
 }
 
 function forDependantInstances(instance, callback) {
@@ -156,7 +149,6 @@ function forDependantInstances(instance, callback) {
 }
 
 function createInstance(node) {
-	requestInfo(node);
 	let entry = {}
 
 	entry.dependencies = [];
