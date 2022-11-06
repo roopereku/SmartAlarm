@@ -162,9 +162,9 @@ class node_base:
             result["valid"] = False
 
         else:
-
             # If new parameters are being set, call deactivate with the old parameters
-            self.__handle_activate(instance, False)
+            if(not self.is_sensor):
+                self.__handle_activate(instance, False)
 
             # What keys are in params_format
             params_keys = list(params_format)

@@ -12,17 +12,17 @@ public:
 		return params["param1"] == "1";
 	}
 
-	void setParamFormat(ParamInfo& params) override
+	void setParamFormat(ParameterList& params) override
 	{
-		auto& param1 = params["param1"];
-		auto& param3 = params["param3"];
-		auto& param2 = params["param2"];
+		params["param1"];
+		params["param3"];
+		params["param2"];
 
-		param1.type = "int";
-		param1.strictHints = true;
+		params[0].type = "int";
+		params[0].strictHints = true;
 
-		param1.addHint("hint1", "test hint 1");
-		param1.addHint("hint2", "test hint 2");
+		params[0].addHint("hint1", "test hint 1");
+		params[0].addHint("hint2", "test hint 2");
 	}
 
 	Status validateParams(Params& params) override
@@ -36,5 +36,5 @@ int main()
 	NodeTest node("1");
 	node.run();
 
-	node.handleMessage("test:1:0 paramsformat");
+	node.handleMessage("test:1:0 hint1 a b");
 }

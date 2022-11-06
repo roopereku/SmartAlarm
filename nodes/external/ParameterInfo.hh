@@ -7,6 +7,10 @@
 class ParameterInfo
 {
 public:
+	ParameterInfo()
+	{
+	}
+
 	std::string defaultValue = "";
 	std::string type = "string";
 	bool strictHints = false;
@@ -14,7 +18,6 @@ public:
 	void addHint(const char* name, const char* description);
 	std::string toJSON();
 
-private:
 	std::vector <std::pair <std::string, std::string>> hints;
 };
 

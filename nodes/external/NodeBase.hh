@@ -2,29 +2,45 @@
 #define NODE_BASE_HH
 
 #include "ParameterInfo.hh"
+#include "ParameterList.hh"
 #include "Status.hh"
 #include "Util.hh"
 
+#include <unordered_map>
 #include <string>
 #include <vector>
+
+typedef std::unordered_map <std::string, std::string> Params;
 
 class NodeBase
 {
 public:
-	NodeBase(const char* nodeType, const char* name, unsigned delay, bool isSensor);
+	NodeBase(const char* nodeType, const char* name, bool isSensor, unsigned delay = 1000);
 
-	virtual bool check(Params& params) = 0;
-	virtual void setParamFormat(ParamInfo& params) = 0;
-	virtual Status validateParams(Params& params) = 0;
+	virtual bool check(Params& params) { return true; }
+	virtual void deactivate(Params& params) {}
+	virtual void activate(Params& params) {}
+
+	virtual void setParamFormat(ParameterList& params) {}
+	virtual Status validateParams(Params& params) { return Status(true); }
 
 	void run();
+
 	void handleMessage(const std::string& message);
+	void handleActivate(size_t instance, bool active);
 
 private:
 	struct Instance
 	{
+		Instance(bool ready) : ready(ready)
+		{
+		}
+
 		Params params;
 		bool ready = false;
+
+		bool lastResult = false;
+		bool activated = false;
 	};
 
 	void respondFormat();
@@ -34,10 +50,12 @@ private:
 	std::string name;
 	std::string ID;
 
-	ParamInfo paramFormat;
+	ParameterList paramFormat;
 	std::vector <Instance> instances;
 
 	bool isSensor;
+	bool defaultReady;
+
 	unsigned delay;
 
 protected:
