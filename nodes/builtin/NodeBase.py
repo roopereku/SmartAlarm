@@ -41,8 +41,6 @@ class node_base:
 
         self.client.loop_start()
         while(True):
-            should_sleep = False
-
             # Only sensors call check and send messages
             if(not self.is_sensor):
                 time.sleep(0.01)
@@ -61,14 +59,12 @@ class node_base:
                             "instance" : i
                         }
 
-                        should_sleep = True
                         self.__respond(message)
 
                     self.instances[i]["lastResult"] = result
 
-            # Sleep for the user specified amount
-            if(should_sleep):
-                time.sleep(delay)
+                    # Sleep for the user specified amount
+                    time.sleep(delay)
 
             # Minimize CPU usage but don't have a big delay
             else: time.sleep(0.01)
