@@ -132,7 +132,9 @@ function allDependenciesPassed(instance) {
 	})
 
 	console.log("(", instance.parent.ID, " instance ", instance.num, ") Passed", passed, "/", instance.dependencies.length)
-	return instance.passed && passed >= instance.dependencies.length
+
+	let thisPassed = instance.parent.isSensor ? instance.passed : true;
+	return thisPassed && passed >= instance.dependencies.length
 }
 
 function forDependantInstances(instance, callback) {
