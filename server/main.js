@@ -92,7 +92,7 @@ function trigger(instance)
 	 *	to each client every time that there is a state change */
 	sendToAll({
 		cmd: "passed",
-		arg: [ instance.parent.ID + ":" + instance.num.toString(), passed ]
+		arg: [ instance.parent.ID, instance.num, passed ]
 	})
 
 	/*	Find the nodes that are dependant on the node that sent
@@ -215,7 +215,7 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-	startBuiltinNode("test", 1);
+	//startBuiltinNode("test", 1);
 	startBuiltinNode("time", 1);
-	startBuiltinNode("day", 1);
+	//startBuiltinNode("day", 1);
 })

@@ -1,29 +1,61 @@
- <!DOCTYPE html>
-<html>
-	<head>
-		<link rel="stylesheet" type="text/css" href="style.css">
-	</head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Drawflow</title>
+</head>
+<body>
+  <script src="drawflow.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js" integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+  <link rel="stylesheet" type="text/css" href="drawflow.css" />
+  <link rel="stylesheet" type="text/css" href="beautiful.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ=" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+  <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
 
-	<body>
-		<button type="button" id="test">Add test</button>
-		<button type="button" id="time">Add time</button>
-		<button type="button" id="day">Add day</button>
-		<button type="button" id="addDep">Add dependecy</button>
 
-		<br>
+  <header>
+    <h2>Drawflow</h2>
+    <div class="github-link"><a href="https://github.com/jerosoler/Drawflow" target="_blank"><i class="fab fa-github fa-3x"></i></a></div>
+  </header>
+  <div class="wrapper">
+    <div class="col">
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="facebook">
+        <i class="fab fa-facebook"></i><span> Facebook</span>
+      </div>
 
-		<p>Add dependency to</p>
-		<input type="text" id="depToID" placeholder="Node ID"></button>
-		<input type="number" id="depTo" placeholder="Instance number"></button>
+    </div>
+    <div class="col-right">
+      <div class="menu">
+        <ul>
+          <li onclick="editor.changeModule('Home'); changeModule(event);" class="selected">Home</li>
+          <li onclick="editor.changeModule('Other'); changeModule(event);">Other Module</li>
+        </ul>
+      </div>
+      <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)">
 
-		<br>
-		<p>Which to add as dependency</p>
-		<input type="text" id="depID" placeholder="Node ID "></button>
-		<input type="number" id="dep" placeholder="Instance number"></button>
+        <div class="btn-export" onclick="Swal.fire({ title: 'Export',
+        html: '<pre><code>'+JSON.stringify(editor.export(), null,4)+'</code></pre>'
+        })">Export</div>
+        <div class="btn-clear" onclick="editor.clearModuleSelected()">Clear</div>
+        <div class="btn-lock">
+          <i id="lock" class="fas fa-lock" onclick="editor.editor_mode='fixed'; changeMode('lock');"></i>
+          <i id="unlock" class="fas fa-lock-open" onclick="editor.editor_mode='edit'; changeMode('unlock');" style="display:none;"></i>
+        </div>
+        <div class="bar-zoom">
+          <i class="fas fa-search-minus" onclick="editor.zoom_out()"></i>
+          <i class="fas fa-search" onclick="editor.zoom_reset()"></i>
+          <i class="fas fa-search-plus" onclick="editor.zoom_in()"></i>
+        </div>
+      </div>
+    </div>
+  </div>
 
-		<div id="instances">
-		</div>
-
-		<script src="index.js"></script>
-	</body>
-</html> 
+  <script src="message.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
