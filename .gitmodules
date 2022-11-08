@@ -1,0 +1,3 @@
+[submodule "nodes/external/pico-sdk"]
+	path = nodes/external/pico-sdk
+	url = https://github.com/raspberrypi/pico-sdk.git

@@ -46,6 +46,8 @@ class node_base:
                 time.sleep(0.01)
                 continue
 
+            should_sleep = False
+
             # Loop through each instance
             for i in range(len(self.instances)):
                 # If the instance is ready for checking, call check()
@@ -62,9 +64,11 @@ class node_base:
                         self.__respond(message)
 
                     self.instances[i]["lastResult"] = result
+                    should_sleep = True
 
-                    # Sleep for the user specified amount
-                    time.sleep(delay)
+            # Sleep for the user specified amount
+            if(should_sleep):
+                time.sleep(delay)
 
             # Minimize CPU usage but don't have a big delay
             else: time.sleep(0.01)

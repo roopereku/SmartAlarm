@@ -5,25 +5,20 @@
 NodeBase::NodeBase(const char* nodeType, const char* name, bool isSensor, unsigned delay)
 	: type(nodeType), name(name), ID(std::string(nodeType) + ":" + name), delay(delay), isSensor(isSensor)
 {
+    stdio_init_all();
+
+    if(cyw43_arch_init())
+        printf("failed to initialise\n");
 }
 
 void NodeBase::handleMessage(const std::string& message)
 {
+	printf("Handle '%s'\n", message.c_str());
+
 	auto p = split(message, ' ');
 	if(p.empty()) return;
 
-	auto msg_id = split(p[0], ':');
-	if(msg_id.size() != 3) return;
-
-	//	Ignore messages not meant for this node
-	if(msg_id[0] != type || msg_id[1] != name)
-		return;
-
-	//	Do nothing if only msg_id is present
-	if(p.size() <= 1)
-		return;
-
-	size_t instance = atoi(msg_id[2].c_str());
+	size_t instance = atoi(p[0].c_str());
 	printf("Instance %lu\n", instance);
 
 	//	If there's not enough instances, add more
@@ -107,7 +102,7 @@ void NodeBase::handleMessage(const std::string& message)
 	}
 
 	std::string json = std::string("{valid: ") + (valid ? "true" : "false") + ", reason: \"" + reason + "\"" + 
-					", instance: " + std::to_string(instance) + ", from: \"" + ID + "\"}";
+					", instance: " + std::to_string(instance) + "}";
 
 	respond(json);
 }
@@ -126,9 +121,7 @@ void NodeBase::handleActivate(size_t instance, bool active)
 	if(active) activate(instances[instance].params);
 	else deactivate(instances[instance].params);
 
-	std::string json = std::string("{ result: ") + (active ? "true" : "false") +
-					", instance: " + std::to_string(instance) + ", from: \"" + ID + "\"}";
-
+	std::string json = std::string("{ result: ") + (active ? "true" : "false") + ", instance: " + std::to_string(instance) + "}";
 	respond(json);
 }
 
@@ -139,21 +132,69 @@ void NodeBase::respondFormat()
 		formatJSON += std::string(paramFormat.key(i)) + ": " + paramFormat[i].toJSON() + ",";
 
 	formatJSON.pop_back();
-	std::string json =	"{valid: true, reason: \"\", format: {" + formatJSON + "}, sensor: " + (isSensor ? "true" : "false") + ", from: \"" + ID + "\"}";
-
+	std::string json =	"{valid: true, reason: \"\", format: {" + formatJSON + "}, sensor: " + (isSensor ? "true" : "false") + "}";
 	respond(json);
 }
 
 void NodeBase::respond(std::string& message)
 {
-	printf("respond '%s'\n", message.c_str());
+	tcp.sendMessage(message);
 }
 
 void NodeBase::run()
 {
+	sleep_ms(3000);
+	printf("run\n");
+
+	cyw43_arch_enable_sta_mode();
+
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+	tcp.connect();
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+
+	tcp.onMessage = [this](const std::string& message)
+	{
+		handleMessage(message);
+	};
+
 	setParamFormat(paramFormat);
 	defaultReady = paramFormat.count() == 0;
 
 	instances.push_back(Instance(defaultReady));
 	respondFormat();
+
+	while(true)
+	{
+		tcp.update();
+
+		if(!isSensor)
+		{
+			sleep_ms(1);
+			continue;
+		}
+
+		bool shouldSleep = false;
+
+		for(size_t i = 0; i < instances.size(); i++)
+		{
+			if(instances[i].ready)
+			{
+				bool result = check(instances[i].params);
+
+				if(result != instances[i].lastResult)
+				{
+					std::string json = std::string("{ result: ") + (result ? "true" : "false") + ", instance: " + std::to_string(i) + "}";
+					respond(json);
+				}
+
+				instances[i].lastResult = result;
+				shouldSleep = true;
+			}
+		}
+
+		if(shouldSleep)
+			sleep_ms(delay);
+
+		else sleep_ms(1);
+	}
 }

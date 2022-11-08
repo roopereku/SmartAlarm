@@ -3,7 +3,7 @@
 class NodeTest : public NodeBase
 {
 public:
-	NodeTest(const char* name) : NodeBase("test", name, 1, true)
+	NodeTest(const char* name) : NodeBase("test", name, true, 0)
 	{
 	}
 
@@ -19,7 +19,7 @@ public:
 		params["param2"];
 
 		params[0].type = "int";
-		params[0].strictHints = true;
+		//params[0].strictHints = true;
 
 		params[0].addHint("hint1", "test hint 1");
 		params[0].addHint("hint2", "test hint 2");
@@ -35,6 +35,4 @@ int main()
 {
 	NodeTest node("1");
 	node.run();
-
-	node.handleMessage("test:1:0 hint1 a b");
 }

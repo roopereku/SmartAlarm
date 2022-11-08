@@ -3,8 +3,11 @@
 
 #include "ParameterInfo.hh"
 #include "ParameterList.hh"
+#include "TCPClient.hh"
 #include "Status.hh"
 #include "Util.hh"
+
+#include "pico/stdlib.h"
 
 #include <unordered_map>
 #include <string>
@@ -45,6 +48,8 @@ private:
 
 	void respondFormat();
 	void respond(std::string& message);
+
+	TCPClient tcp;
 
 	std::string type;
 	std::string name;
