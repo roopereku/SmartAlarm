@@ -17,14 +17,14 @@ ws.addEventListener('message', (event) => {
 	if(msg.cmd === "instance")
 		showInstance(msg.arg[0], msg.result);
 
-	if(msg.cmd == "dependency")
+	if(msg.cmd === "dependency")
 	{
 		const target = document.getElementById(msg.arg[0] + ":" + msg.arg[1].toString());
 		target.appendChild(document.createElement("br"));
 		target.appendChild(document.createTextNode(msg.arg[2] + ":" + msg.arg[3].toString()));
 	}
 
-	if(msg.cmd == "passed")
+	if(msg.cmd === "passed")
 	{
 		const target = document.getElementById(msg.arg[0])
 		target.style.backgroundColor = msg.arg[1] ? "green" : "red";
