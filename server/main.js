@@ -21,7 +21,7 @@ mqttClient.on("message", (topic, message) => {
 	//	If the message tells if the node is a sensor, it also contains the parameter format
 	if(msg.sensor !== undefined)
 	{
-		let node = activeNodes.find((n) => msg.from == n.ID);
+		let node = activeNodes.find((n) => msg.from === n.ID);
 		if(node.isSensor === undefined)
 		{
 			node.isSensor = msg.sensor;
@@ -33,7 +33,7 @@ mqttClient.on("message", (topic, message) => {
 	if(msg.result !== undefined)
 	{
 		//	Find the node that this message is from and see if it passef
-		node = activeNodes.find((n) => msg.from == n.ID)
+		node = activeNodes.find((n) => msg.from === n.ID)
 		node.instances[msg.instance].passed = msg.result
 
 		trigger(node.instances[msg.instance])
@@ -55,10 +55,10 @@ ws.on("connection", (c) => {
 		const msg = JSON.parse(payload.toString())
 		console.log(msg)
 
-		if(msg.cmd == "instance")
+		if(msg.cmd === "instance")
 		{
 			const ID = msg.arg[0]
-			node = activeNodes.find((n) => ID == n.ID);
+			node = activeNodes.find((n) => ID === n.ID);
 
 			if(node === undefined)
 				msg.error = true
@@ -66,7 +66,7 @@ ws.on("connection", (c) => {
 			else msg.result = createInstance(node)
 		}
 
-		if(msg.cmd == "dependency")
+		if(msg.cmd === "dependency")
 		{
 			addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
 		}
@@ -165,8 +165,8 @@ function createInstance(node) {
 }
 
 function addDependency(toID, toInstace, nodeID, nodeInstance) {
-	to = activeNodes.find((n) => toID == n.ID)
-	dep = activeNodes.find((n) => nodeID == n.ID)
+	to = activeNodes.find((n) => toID === n.ID)
+	dep = activeNodes.find((n) => nodeID === n.ID)
 
 	to.instances[toInstace].dependencies.push(dep.instances[nodeInstance])
 	console.log(to.ID, " instance ", toInstace, " now depends on ", dep.ID, " instance ", nodeInstance)
@@ -178,7 +178,7 @@ function addDependency(toID, toInstace, nodeID, nodeInstance) {
 function startBuiltinNode(type, name, isInput) {
 	const nodeType = builtinNodes.find((s) => s === type);
 
-    if(nodeType == undefined)
+    if(nodeType === undefined)
         return undefined;
 
     const builtinRoot = __dirname + "/../nodes/builtin/";
@@ -199,7 +199,7 @@ function startBuiltinNode(type, name, isInput) {
 
 app.get("/add/:builtintype/:name", (req, res) => {
 	const ID = req.params.builtintype + ":" + req.params.name;
-	node = activeNodes.find((n) => ID == n.ID)
+	node = activeNodes.find((n) => ID === n.ID)
 
 	if(node === undefined)
 	{
