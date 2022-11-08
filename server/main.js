@@ -85,7 +85,7 @@ let activeNodes = []
 
 function trigger(instance)
 {
-	let passed = allDependenciesPassed(instance)
+	let passed = hasPassed(instance)
 
 	/*	Since it's guaranteed that the nodes send their state
 	 *	only when it changes, it should be fine to send the state
@@ -99,12 +99,10 @@ function trigger(instance)
 	 *	the message and trigger them if all of
 	 *	their dependecies have passed */
 	forDependantInstances(instance, (i) => {
-
-		/*	Call trigger recursively so that an instance won't
-		 *	display as passed if even one of the dependencies hasn't passed */
+		//	Call trigger recursively so that dependant nodes are alerted when something changes
 		trigger(i)
 
-		if(allDependenciesPassed(i)) {
+		if(hasPassed(i)) {
 			console.log("trigger", i.parent.ID, "instance", i.num)
 
 			if(!i.parent.isSensor)
@@ -125,16 +123,18 @@ function capitalizeFirstLetter(string) {
 	return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function allDependenciesPassed(instance) {
+function hasPassed(instance) {
 	let passed = 0
 	instance.dependencies.forEach((d) => {
-		passed += allDependenciesPassed(d)
+		passed += hasPassed(d)
 	})
 
 	console.log("(", instance.parent.ID, " instance ", instance.num, ") Passed", passed, "/", instance.dependencies.length)
 
 	let thisPassed = instance.parent.isSensor ? instance.passed : true;
-	return thisPassed && passed >= instance.dependencies.length
+	let dependecyPassed = instance.dependencies.length == 0 ? true : passed > 0
+
+	return thisPassed && dependecyPassed
 }
 
 function forDependantInstances(instance, callback) {
