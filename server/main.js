@@ -43,20 +43,34 @@ mqttClient.on("message", (topic, message) => {
 const httpServer = http.createServer(app).listen(3001)
 const ws = new webSocket.Server({ server: httpServer })
 
-function sendToAll(json)
-{
+function sendToAll(json) {
 	ws.clients.forEach((client) => {
 		client.send(JSON.stringify(json));
 	})
 }
 
+function informAboutNode(node, client) {
+	const msg = {
+		cmd : "nodeadd",
+		name : node.name,
+		type : node.type,
+		format : node.paramFormat,
+		sensor : node.isSensor
+	}
+
+	client.send(JSON.stringify(msg));
+}
+
 ws.on("connection", (c) => {
+	activeNodes.forEach((n) => {
+		informAboutNode(n, c)
+	})
+
 	c.on("message", (payload) => {
 		const msg = JSON.parse(payload.toString())
 		console.log(msg)
 
-		if(msg.cmd === "instance")
-		{
+		if(msg.cmd === "instance") {
 			const ID = msg.arg[0]
 			node = activeNodes.find((n) => ID === n.ID);
 
@@ -66,9 +80,15 @@ ws.on("connection", (c) => {
 			else msg.result = createInstance(node)
 		}
 
-		if(msg.cmd === "dependency")
-		{
+		else if(msg.cmd === "dependency") {
 			addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+		}
+
+		else if(msg.cmd === "parameters") {
+			//let node = activeNodes.find((n) => msg.arg[0] === n.ID);
+			console.log(msg.arg[0], msg.arg[1], msg.arg[2])
+			let type = msg.arg[0].split(":")[0]
+			mqttClient.publish("nodes/" + type, msg.arg[0] + ":" + msg.arg[1] + " " + msg.arg[2])
 		}
 
 		sendToAll(msg);
@@ -189,11 +209,13 @@ function startBuiltinNode(type, name, isInput) {
     entry.process = spawn("python3", [ nodePath, name ]);
 	entry.instances = [];
 	entry.builtin = true;
+	entry.type = nodeType;
 	entry.name = name;
 	entry.topic = "nodes/" + nodeType;
 	entry.ID = nodeType + ":" + name;
 
 	activeNodes.push(entry);
+
 	return entry;
 }
 
@@ -215,7 +237,7 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-	//startBuiltinNode("test", 1);
-	startBuiltinNode("time", 1);
-	//startBuiltinNode("day", 1);
+	startBuiltinNode("test", "test");
+	startBuiltinNode("time", "time");
+	startBuiltinNode("day", "day");
 })

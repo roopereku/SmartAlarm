@@ -10,11 +10,21 @@ ws.addEventListener('message', (event) => {
 	//if(msg.cmd === "instance")
 	//	showInstance(msg.arg[0], msg.result);
 
-	if(msg.cmd === "dependency")
+	if(msg.cmd == "nodeadd")
+	{
+		console.log("node type", msg.type)
+		console.log("node name", msg.name)
+		console.log("is sensor", msg.sensor)
+
+		addNodeListing(msg.type, msg.name, msg.sensor)
+		addNodeFormat(msg.type, msg.format)
+	}
+
+	else if(msg.cmd === "dependency")
 	{
 	}
 
-	if(msg.cmd === "passed")
+	else if(msg.cmd === "passed")
 	{
 		console.log(msg.arg)
 		highlightNodeByID(msg.arg[0], msg.arg[1], msg.arg[2] ? "green" : "red")
@@ -42,6 +52,13 @@ function sendMessage(json)
 	})
 }
 */
+
+function setParameters(node, params) {
+	sendMessage({
+		cmd: "parameters",
+		arg: [ node.name, node.data.instance, params ]
+	})
+}
 
 function addDependency(to, node) {
 	sendMessage({
