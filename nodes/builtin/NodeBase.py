@@ -1,10 +1,11 @@
-import paho.mqtt.client as mqtt
+import socket
+import select
 import json
 import time
 import sys
 
-broker_ip = "localhost"
-broker_port = 1883
+server_ip = "localhost"
+server_port = 4242
 
 class node_base:
     def __init__(self, node_type, delay, is_sensor):
@@ -26,21 +27,34 @@ class node_base:
 
         print("Default ready", self.defaultReady)
 
-        self.client = mqtt.Client(self.ID)
-        self.client.connect(broker_ip, broker_port)
-        print("%s Connected to %s:%d" % (self.ID, broker_ip, broker_port))
+        self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connection.connect((server_ip, server_port))
 
-        self.client.on_message = self.__handle_message
-        self.client.subscribe("nodes/" + node_type)
-        print("Subscribed to nodes/" + node_type)
+        self.poller = select.poll()
+        self.poller.register(self.connection, select.POLLIN)
+
+        #self.client = mqtt.Client(self.ID)
+        #self.client.connect(broker_ip, broker_port)
+        #print("%s Connected to %s:%d" % (self.ID, broker_ip, broker_port))
+
+        #self.client.on_message = self.__handle_message
+        #self.client.subscribe("nodes/" + node_type)
+        #print("Subscribed to nodes/" + node_type)
 
         self.__respond({
             "format": self.__patched_format(),
-            "sensor": self.is_sensor
+            "sensor": self.is_sensor,
+            "id" : self.ID
         })
 
-        self.client.loop_start()
+        #self.client.loop_start()
+
         while(True):
+            event = self.poller.poll(0)
+            for desc, ev in event:
+                data = self.connection.recv(2048)
+                self.__handle_message(data)
+
             # Only sensors call check and send messages
             if(not self.is_sensor):
                 time.sleep(0.01)
@@ -101,8 +115,7 @@ class node_base:
         self.__respond(message)
 
     def __respond(self, response):
-        response["from"] = self.ID
-        self.client.publish("noderesult", json.dumps(response))
+        self.connection.sendall(bytes(json.dumps(response) + "\n", encoding="utf8"))
 
     def __patched_format(self):
         format_preset = {
@@ -122,20 +135,11 @@ class node_base:
 
         return result
 
-    def __handle_message(self, client, userdata, message):
-        p = message.payload.decode("utf-8").split()
-        msg_id = p[0].split(":")
-
-        # Ignore the message if ID doesn't contain type, name and instance
-        if(len(msg_id) != 3):
-            return;
-
-        # Only handle messages meant for this node
-        if(msg_id[0] != self.node_type or msg_id[1] != self.name):
-            return
+    def __handle_message(self, message):
+        p = message.decode("utf-8").split()
 
         # If the instance number is more than there are instances, add instances
-        instance = int(msg_id[2])
+        instance = int(p[0])
         for i in range(len(self.instances), instance + 1):
             self.instances.append({ "ready" : self.defaultReady, "params" : {}, "lastResult": False })
 
@@ -151,10 +155,10 @@ class node_base:
 
         # Is the first parameter "activate" and is this node a sensor
         elif(p[0] == "activate" and not self.is_sensor):
-            self.__handle_activate(instance, True)
+            return self.__handle_activate(instance, True)
 
         elif(p[0] == "deactivate" and not self.is_sensor):
-            self.__handle_activate(instance, False)
+            return self.__handle_activate(instance, False)
 
         # Does the the parameter count match
         elif(len(p) != len(params_format)):

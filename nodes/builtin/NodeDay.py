@@ -23,8 +23,8 @@ class node_day(node_base):
                 "hint" : {
                     "0" : "monday",
                     "1" : "tuesday",
-                    "2" : "friday",
-                    "3" : "wednesday",
+                    "2" : "wednesday",
+                    "3" : "thursday",
                     "4" : "friday",
                     "5" : "saturday",
                     "6" : "sunday",
@@ -35,9 +35,9 @@ class node_day(node_base):
                 "type" : "string",
                 "strict" : True,
                 "hint" : {
-                    "equal" : "Trigger if the time matches",
-                    "before" : "Trigger if the clock is less than specified",
-                    "after" : "Trigger if the clock is more than specified"
+                    "equal" : "Same day",
+                    "before" : "Before the day",
+                    "after" : "After the day"
                 }
             }
         }

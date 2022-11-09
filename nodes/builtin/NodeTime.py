@@ -35,9 +35,9 @@ class node_time(node_base):
                 "type" : "string",
                 "strict" : True,
                 "hint" : {
-                    "equal" : "Trigger if the time matches",
-                    "before" : "Trigger if the clock is less than specified",
-                    "after" : "Trigger if the clock is more than specified"
+                    "equal" : "Equal",
+                    "before" : "Before",
+                    "after" : "After"
                 }
             }
         }

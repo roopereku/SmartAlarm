@@ -1,43 +1,51 @@
 const spawn = require("child_process").spawn
 const express = require('express')
-const mqtt = require('mqtt')
 const http = require('http')
 const webSocket = require('ws')
+const net = require("net");
 
 const port = 3000
 const app = express()
-const mqttClient = mqtt.connect("mqtt://localhost:1883", { clientId: "server" });
 
 app.use(express.static(__dirname + "/../site/"))
 
-mqttClient.on("connect", () => {
-	console.log("MQTT connected");
-	mqttClient.subscribe("noderesult");
-})
+const server = net.createServer((client) => {
+	console.log("Connection from ", client.remoteAddress)
 
-mqttClient.on("message", (topic, message) => {
-	const msg = JSON.parse(message.toString())
+	client.on("data", (data) => {
+		/*	When using plain TCP, it's possible that separate messages
+		 *	are found in the same packet. To prevent this split the data
+		 *	with newlines because that shouldn't be in a JSON */
+		const jsons = data.toString().trim().split("\n")
+		jsons.forEach((json) => {
 
-	//	If the message tells if the node is a sensor, it also contains the parameter format
-	if(msg.sensor !== undefined)
-	{
-		let node = activeNodes.find((n) => msg.from === n.ID);
-		if(node.isSensor === undefined)
-		{
-			node.isSensor = msg.sensor;
-			node.paramFormat = msg.format;
-		}
-	}
+			const msg = JSON.parse(json)
+			console.log(msg)
 
-	//	Is result present
-	if(msg.result !== undefined)
-	{
-		//	Find the node that this message is from and see if it passef
-		node = activeNodes.find((n) => msg.from === n.ID)
-		node.instances[msg.instance].passed = msg.result
+			//	Nodes will only send their ID in the first message
+			if(msg.id !== undefined)
+			{
+				let node = activeNodes.find((n) => msg.id === n.ID)
 
-		trigger(node.instances[msg.instance])
-	}
+				if(node.connection === undefined)
+				{
+					node.isSensor = msg.sensor;
+					node.paramFormat = msg.format;
+					node.connection = client
+				}
+			}
+
+			//	Is result present
+			if(msg.result !== undefined)
+			{
+				//	Find the node that this message is from and see if it passef
+				let node = activeNodes.find((n) => client === n.connection)
+				node.instances[msg.instance].passed = msg.result
+
+				trigger(node.instances[msg.instance])
+			}
+		})
+	})
 })
 
 const httpServer = http.createServer(app).listen(3001)
@@ -85,10 +93,8 @@ ws.on("connection", (c) => {
 		}
 
 		else if(msg.cmd === "parameters") {
-			//let node = activeNodes.find((n) => msg.arg[0] === n.ID);
-			console.log(msg.arg[0], msg.arg[1], msg.arg[2])
-			let type = msg.arg[0].split(":")[0]
-			mqttClient.publish("nodes/" + type, msg.arg[0] + ":" + msg.arg[1] + " " + msg.arg[2])
+			let node = activeNodes.find((n) => msg.arg[0] === n.ID);
+			node.connection.write(msg.arg[1] + " " + msg.arg[2])
 		}
 
 		sendToAll(msg);
@@ -125,16 +131,18 @@ function trigger(instance)
 		if(hasPassed(i)) {
 			console.log("trigger", i.parent.ID, "instance", i.num)
 
-			if(!i.parent.isSensor)
-				//	TODO Send a message to the node that tells it to activate
+			if(!i.parent.isSensor) {
 				console.log("activate", i.parent.ID, "instance", i.num);
+				i.parent.connection.write(i.num + " activate")
+			}
 		}
 
 		else
 		{
-			if(!i.parent.isSensor)
-				//	TODO Send a message to the node that tells it to deactivate
+			if(!i.parent.isSensor) {
 				console.log("deactivate", i.parent.ID, "instance", i.num);
+				i.parent.connection.write(i.num + " deactivate")
+			}
 		}
 	})
 }
@@ -237,7 +245,9 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-	startBuiltinNode("test", "test");
-	startBuiltinNode("time", "time");
-	startBuiltinNode("day", "day");
+	server.listen(4242, () => {
+		startBuiltinNode("test", "test1");
+		startBuiltinNode("time", "time1");
+		startBuiltinNode("day", "day1");
+	})
 })

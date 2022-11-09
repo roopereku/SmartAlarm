@@ -132,7 +132,7 @@ void NodeBase::respondFormat()
 		formatJSON += std::string(paramFormat.key(i)) + ": " + paramFormat[i].toJSON() + ",";
 
 	formatJSON.pop_back();
-	std::string json =	"{valid: true, reason: \"\", format: {" + formatJSON + "}, sensor: " + (isSensor ? "true" : "false") + "}";
+	std::string json =	"{format: {" + formatJSON + "}, sensor: " + (isSensor ? "true" : "false") + "id: " + ID + "}";
 	respond(json);
 }
 
