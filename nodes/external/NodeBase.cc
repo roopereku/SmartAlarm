@@ -149,7 +149,7 @@ void NodeBase::run()
 	cyw43_arch_enable_sta_mode();
 
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-	tcp.connect();
+	while(!tcp.connect());
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
 
 	tcp.onMessage = [this](const std::string& message)

@@ -1,5 +1,3 @@
-#ifdef TEST
-
 #include "NodeBase.hh"
 
 class NodeTest : public NodeBase
@@ -38,5 +36,3 @@ int main()
 	NodeTest node("1");
 	node.run();
 }
-
-#endif

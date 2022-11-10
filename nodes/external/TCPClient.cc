@@ -20,11 +20,13 @@ void TCPClient::sendMessage(const std::string& message)
 
 bool TCPClient::connect()
 {
-	if(cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000))
+	if(!isWifiConnected && cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000))
 	{
 		printf("failed to connect.\n");
 		return false;
 	}
+
+	isWifiConnected = true;
 
 	ip_addr_t remote_addr;
 	ip4addr_aton(TEST_TCP_SERVER_IP, &remote_addr);
@@ -48,7 +50,8 @@ bool TCPClient::connect()
 	err_t err = tcp_connect(pcb, &remote_addr, TCP_PORT, connected);
 	cyw43_arch_lwip_end();
 
-	return err == ERR_OK;
+	isServerConnected = err == ERR_OK;
+	return isServerConnected;
 }
 
 err_t TCPClient::recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
@@ -84,7 +87,7 @@ err_t TCPClient::connected(void *arg, struct tcp_pcb *tpcb, err_t err)
 		return err;
 	}
 
-	static_cast <TCPClient*> (arg)->isConnected = true;
+	//static_cast <TCPClient*> (arg)->isConnected = true;
 	printf("2 Waiting for buffer from server\n");
 	return ERR_OK;
 }

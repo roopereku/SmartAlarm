@@ -29,7 +29,9 @@ public:
 
 private:
     tcp_pcb *pcb = nullptr;
-    bool isConnected = false;
+
+    bool isWifiConnected = false;
+    bool isServerConnected = false;
 
 	std::string message;
 };
