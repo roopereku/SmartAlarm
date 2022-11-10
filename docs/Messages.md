@@ -1,29 +1,33 @@
 # Messages
 
-Messages are sent to different nodes by publishing to an MQTT topic that looks like `nodes/nodetype`,
-so if you want to send a message to `NodeTime.py`, the topic should be `nodes/time`.
+Messages are sent between nodes and the server using plain TCP sockets.
+
+Why TCP? Because the nodes will never talk to eachother, using something like MQTT is a bit overkill.
+Another downside of MQTT is that it requires a broker which everyone connects to it which is unnecessary.
 
 ## General syntax
 Messages consist of
-* Node ID
-	* Node type
-	* Node name
 * Node instance number
 * Parameters
 
-For an example a message could look like `time:anyname:0 12:44 before`. This instructs `NodeTime.py` to pass when it thinks that the current time is before 12:44.
+Let's assume that we have a connection to NodeTime.py.
+For an example a message could look like `0 12:44 before`. This instructs `NodeTime.py` to pass when it thinks that the current time is before 12:44.
 
-If invalid parameters are passed, an error will be returned and the node will won't even check if it's condition passed. To prevent this you can send `time:anyname:0 paramsformat` to the node and it will respond with the format that it expects the parameters to be in. The format contains parameter names, their types and hints for what the values could be.
+If invalid parameters are passed, an error will be returned and the node won't even try check if it's condition has passed.
+To prevent this you can save and utilize the parameter format sent by the node when it first connects.
 
-To create multiple instances of the node you can just change the instance number, so if the message looks like `time:anyname:1 12:44 before`, we're instructing instance 1 of `NodeTime.py` to pass if the current time is before 12:44.
+To create multiple instances of the node you can just change the instance number, so if the message looks like `1 12:44 before`,
+we're instructing instance 1 of `NodeTime.py` to pass if the current time is before 12:44.
 
-## Handling responses
-Responses are sent to the MQTT topic `noderesult`.
+## Message contents
 
-The response will be a JSON which has some of the following information:
+The first message a node sends will always contain:
 * Who the message came from
+* Format of the node's parameters
+* Is the node a sensor
+
+Messages sent after the first message might contain
 * Which instance of the node the message came from
 * Was there an error?
 * The reason for the error
-* Did the instances condition pass?
-* Format of the node's parameters
+* Did the instance's condition pass?
