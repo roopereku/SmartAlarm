@@ -1,8 +1,10 @@
 const id = document.getElementById("drawflow");
 const editor = new Drawflow(id);
+
 editor.reroute = true;
 editor.reroute_fix_curvature = true;
 editor.force_first_input = false;
+editor.draggable_inputs = false;
 
 let nodeFormats = {}
 
@@ -145,6 +147,7 @@ editor.on('addReroute', function(id) {
 editor.on('removeReroute', function(id) {
   console.log("Reroute removed " + id);
 })
+
 /* DRAG EVENT */
 
 /* Mouse and Touch Actions */
