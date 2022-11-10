@@ -220,13 +220,7 @@ function addNodeToDrawFlow(id, pos_x, pos_y) {
 				}
 
 				else {
-					let inputType = ""
-					switch(param.type) {
-						case "int": inputType = "number"; break
-						case "string": inputType = "text"; break
-					}
-
-					html += '<input type="' + inputType + '" class="nodeValue" required>'
+					html += '<input type="' + param.type + '" class="nodeValue" required>'
 				}
 			}
 

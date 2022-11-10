@@ -120,7 +120,7 @@ class node_base:
     def __patched_format(self):
         format_preset = {
             "default" : "",
-            "type" : "string",
+            "type" : "text",
             "strict" : False,
             "hint": {}
         }

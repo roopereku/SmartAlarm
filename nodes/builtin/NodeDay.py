@@ -17,8 +17,6 @@ class node_day(node_base):
     def get_params_format(self):
         return {
             "day" : {
-                "type" : "string",
-                "default" : "monday",
                 "strict" : True,
                 "hint" : {
                     "0" : "monday",
@@ -32,7 +30,6 @@ class node_day(node_base):
             },
 
             "comparison" : {
-                "type" : "string",
                 "strict" : True,
                 "hint" : {
                     "equal" : "Same day",

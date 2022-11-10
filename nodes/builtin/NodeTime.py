@@ -9,10 +9,16 @@ class node_time(node_base):
         pt = params["real"]
         cmp = params["comparison"]
 
-        # TODO Might want to check for seconds too
-        if(cmp == "equal"): return now.tm_min == pt.tm_min and now.tm_hour == pt.tm_hour
-        elif(cmp == "before"): return now.tm_hour <= pt.tm_hour and now.tm_min < pt.tm_min
+        print("now", now.tm_hour, now.tm_min)
+        print("pt", pt.tm_hour, pt.tm_min)
+
+
+        if(cmp == "before"):
+            if(now.tm_min > pt.tm_min): return now.tm_hour <= pt.tm_hour
+            else: return now.tm_min < pt.tm_min
+
         elif(cmp == "after"): return now.tm_hour >= pt.tm_hour and now.tm_min > pt.tm_min
+        elif(cmp == "equal"): return now.tm_min == pt.tm_min and now.tm_hour == pt.tm_hour
 
     def validate_params(self, params):
         try:
@@ -27,12 +33,11 @@ class node_time(node_base):
     def get_params_format(self):
         return {
             "time" : {
-                "type" : "string",
+                "type" : "time",
                 "default" : "12:00"
             },
 
             "comparison" : {
-                "type" : "string",
                 "strict" : True,
                 "hint" : {
                     "equal" : "Equal",
