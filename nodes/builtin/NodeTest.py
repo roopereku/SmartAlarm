@@ -3,8 +3,7 @@ import subprocess
 
 class node_test(node_base):
     def check(self, params):
-        print("check")
-        return params["message"] == "moi"
+        return int(params["valtteri"]) >= 50
 
     def activate(self, params):
         self.process = subprocess.Popen('glxgears')
@@ -18,6 +17,10 @@ class node_test(node_base):
         pass
 
     def get_params_format(self):
-        return {}
+        return {
+            "valtteri": {
+                "type" : "range"
+            }
+        }
 
-node = node_test("test", 1, False)
+node = node_test("test", 0.5, True)
