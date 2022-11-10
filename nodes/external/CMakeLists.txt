@@ -1,6 +1,15 @@
 # Set minimum required version of CMake
 cmake_minimum_required(VERSION 3.12)
 
+message(STATUS ${NODE})
+if(NODE)
+	if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/nodes/${NODE}.cc)
+		message(FATAL_ERROR "No such node")
+	endif()
+else()
+	message(FATAL_ERROR "No node specified. Run cmake with -DNODE=nodename")
+endif()
+
 # Include build functions from Pico SDK
 set(PICO_BOARD pico_w)
 set(CMAKE_BUILD_TYPE Debug)
@@ -9,7 +18,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 # Set name of project (as PROJECT_NAME) and C/C++ standards
-project(picotest C CXX ASM)
+project(node C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 
