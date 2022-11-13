@@ -22,6 +22,7 @@ we're instructing instance 1 of `NodeTime.py` to pass if the current time is bef
 ## Message contents
 
 The first message a node sends will always contain:
+* ID, Type, Name
 * Who the message came from
 * Format of the node's parameters
 * Is the node a sensor
