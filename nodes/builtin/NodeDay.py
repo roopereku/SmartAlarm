@@ -39,4 +39,4 @@ class node_day(node_base):
             }
         }
 
-node = node_day("day", 1, True)
+node = node_day("day", 1, "sensor")

@@ -8,7 +8,7 @@ server_ip = "localhost"
 server_port = 4242
 
 class node_base:
-    def __init__(self, node_type, delay, is_sensor):
+    def __init__(self, node_type, delay, context):
         print("Node %s" % (node_type))
 
         if(len(sys.argv) == 1):
@@ -18,12 +18,13 @@ class node_base:
         self.name = sys.argv[1]
         self.node_type = node_type
         self.ID = node_type + ":" + self.name
-        self.is_sensor = is_sensor
+        self.context = context
         self.delay = delay
 
         # If the node takes no parameters, it's ready by default
         self.defaultReady = len(self.get_params_format()) == 0
         self.instances = [ { "ready" : self.defaultReady, "params" : {}, "lastResult": False } ]
+        self.__disable_control(0)
 
         print("Default ready", self.defaultReady)
 
@@ -33,21 +34,14 @@ class node_base:
         self.poller = select.poll()
         self.poller.register(self.connection, select.POLLIN)
 
-        #self.client = mqtt.Client(self.ID)
-        #self.client.connect(broker_ip, broker_port)
-        #print("%s Connected to %s:%d" % (self.ID, broker_ip, broker_port))
-
-        #self.client.on_message = self.__handle_message
-        #self.client.subscribe("nodes/" + node_type)
-        #print("Subscribed to nodes/" + node_type)
-
+        # Send out relevant information
         self.__respond({
             "format": self.__patched_format(),
-            "sensor": self.is_sensor,
-            "id" : self.ID
+            "context": self.context,
+            "id" : self.ID,
+            "name" : self.name,
+            "type" : self.node_type
         })
-
-        #self.client.loop_start()
 
         while(True):
             event = self.poller.poll(0)
@@ -55,8 +49,8 @@ class node_base:
                 data = self.connection.recv(2048)
                 self.__handle_message(data)
 
-            # Only sensors call check and send messages
-            if(not self.is_sensor):
+            # Only sensors and control nodes call check and send messages
+            if(self.context == "action"):
                 time.sleep(0.01)
                 continue
 
@@ -66,6 +60,12 @@ class node_base:
             for i in range(len(self.instances)):
                 # If the instance is ready for checking, call check()
                 if(self.instances[i]["ready"]):
+
+                    # If a control node instance hasn't been activated, don't perform check
+                    if(self.context == "control" and not self.instances[i]["activated"]):
+                        continue
+
+                    self.current_instance = i
                     result = self.check(self.instances[i]["params"])
 
                     # Only send messages if the value differs to minimize traffic
@@ -88,11 +88,14 @@ class node_base:
             else: time.sleep(0.01)
 
     def __handle_activate(self, instance, value):
+        print(value, " Passed to __handle_activate")
+
         if(not "activated" in self.instances[instance]):
             self.instances[instance]["activated"] = False
 
-        # If the node is already in the given state, do nothing
-        if(self.instances[instance]["activated"] == value):
+        # If the action node is already in the given state, do nothing.
+        # Control nodes can accept the previous state
+        if(self.context == "action" and self.instances[instance]["activated"] == value):
             return
 
         # Are the parameters set?
@@ -104,8 +107,14 @@ class node_base:
         self.instances[instance]["activated"] = value
 
         # Activate or deactivate
-        if(value): self.activate(self.instances[instance]["params"])
-        else: self.deactivate(self.instances[instance]["params"])
+        if(value):
+            self.activate(self.instances[instance]["params"])
+
+        else:
+            if(self.context == "control"):
+                self.__disable_control(instance)
+
+            else: self.deactivate(self.instances[instance]["params"])
 
         message = {
             "result" : value,
@@ -137,11 +146,13 @@ class node_base:
 
     def __handle_message(self, message):
         p = message.decode("utf-8").split()
+        print(p)
 
         # If the instance number is more than there are instances, add instances
         instance = int(p[0])
         for i in range(len(self.instances), instance + 1):
             self.instances.append({ "ready" : self.defaultReady, "params" : {}, "lastResult": False })
+            self.__disable_control(len(self.instances) - 1)
 
         # Delete the ID from the incoming parameters
         del p[0]
@@ -154,10 +165,10 @@ class node_base:
             return
 
         # Is the first parameter "activate" and is this node a sensor
-        elif(p[0] == "activate" and not self.is_sensor):
+        elif(p[0] == "activate" and self.context != "sensor"):
             return self.__handle_activate(instance, True)
 
-        elif(p[0] == "deactivate" and not self.is_sensor):
+        elif(p[0] == "deactivate" and self.context != "sensor"):
             return self.__handle_activate(instance, False)
 
         # Does the the parameter count match
@@ -167,7 +178,7 @@ class node_base:
 
         else:
             # If new parameters are being set, call deactivate with the old parameters
-            if(not self.is_sensor):
+            if(self.context != "sensor"):
                 self.__handle_activate(instance, False)
 
             # What keys are in params_format
@@ -175,34 +186,17 @@ class node_base:
 
             # Loop through each incoming parameter
             for i in range(len(p)):
-                typename = params_format[params_keys[i]]
-                value = None
+                if(params_format[params_keys[i]]["strict"]):
+                    matches = 0
+                    for h in params_format[params_keys[i]]["hint"]:
+                        matches += p[i] == h
 
-                # Attempt to convert the parameter to it's real type
-                try:
-                    if(typename == "int"): value = int(p[i])
-                    elif(typename == "float"): value = float(p[i])
+                    if(matches == 0):
+                        result["reason"] = "Parameter '%s' doesn't match hints" % (params_keys[i])
+                        result["valid"] = False
+                        break
 
-                    if(value == None):
-                        value = p[i]
-
-                    self.instances[instance]["params"][params_keys[i]] = value
-
-                    if(params_format[params_keys[i]]["strict"]):
-                        matches = 0
-                        for h in params_format[params_keys[i]]["hint"]:
-                            matches += p[i] == h
-
-                        if(matches == 0):
-                            result["reason"] = "Parameter '%s' doesn't match hints" % (params_keys[i])
-                            result["valid"] = False
-                            break
-
-                # The type of the parameter is invalid
-                except ValueError:
-                    result["reason"] = "Parameter '%s' should be of type '%s'" % (params_keys[i], typename)
-                    result["valid"] = False
-                    break
+                self.instances[instance]["params"][params_keys[i]] = p[i]
 
             # If there's no error so far, validate the parameters
             if(result["valid"]):
@@ -217,6 +211,15 @@ class node_base:
                 self.instances[instance]["lastResult"] = False
 
         self.__respond(result)
+
+    def __disable_control(self, instance):
+        # If a control node is to be disabled, disable it and re-setup it
+        if(self.context == "control"):
+            self.instances[instance]["activated"] = False
+            self.control_setup(self.instances[instance]["params"])
+
+    def control_finish(self):
+        self.__disable_control(self.current_instance)
 
     def check(self, params):
         raise NotImplementedError()

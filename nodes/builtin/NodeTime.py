@@ -47,4 +47,4 @@ class node_time(node_base):
             }
         }
 
-node = node_time("time", 1, True)
+node = node_time("time", 1, "sensor")
