@@ -22,34 +22,23 @@ const server = net.createServer((client) => {
 			const msg = JSON.parse(json)
 			console.log(msg)
 
-			//	Nodes will only send their ID in the first message
+			/*	If a message contains the ID, it should be the first
+			 *	message that a node sends. The first message contains all
+			 *	sorts of relevant information so let's save it */
 			if(msg.id !== undefined)
 			{
-				let node = activeNodes.find((n) => msg.id === n.ID)
+				let node = {};
+				node.instances = [];
+				node.builtin = false;
+				node.type = msg.type;
+				node.name = msg.name;
+				node.ID = msg.id
 
-				/*	If the node doesn't even exist, add a new node with
-				 *	the information that was sent. This could happen when
-				 *	a node that isn't started by the server connects */
-				if(node === undefined)
-				{
-					node = {};
-					node.instances = [];
-					node.builtin = false;
-					node.type = msg.type;
-					node.name = msg.name;
-					node.ID = msg.id
+				node.context = msg.context;
+				node.paramFormat = msg.format;
+				node.connection = client
 
-					activeNodes.push(node);
-				}
-
-				/*	If the connection isn't set, neither is the
-				 *	context or the parameter format */
-				if(node.connection === undefined)
-				{
-					node.context = msg.context;
-					node.paramFormat = msg.format;
-					node.connection = client
-				}
+				activeNodes.push(node);
 			}
 
 			//	Is result present
@@ -165,10 +154,6 @@ function trigger(instance) {
 	})
 }
 
-function capitalizeFirstLetter(string) {
-	return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
 function dependenciesPassed(instance) {
 	let passed = 0
 	instance.dependencies.forEach((d) => {
@@ -225,21 +210,12 @@ function addDependency(toID, toInstace, nodeID, nodeInstance) {
 	trigger(dep.instances[nodeInstance])
 }
 
-function startBuiltinNode(type, name, isInput) {
-    const builtinRoot = __dirname + "/../nodes/builtin/";
-    const nodePath = builtinRoot + "Node" + capitalizeFirstLetter(type) + ".py";
-    console.log(nodePath + " Name " + name);
+function startBuiltinNode(scriptName, name) {
+    const builtinRoot = __dirname + "/../nodes/builtin/"
+    const nodePath = builtinRoot + scriptName + ".py"
+    console.log(nodePath + " " + name)
 
-	entry = {};
-    entry.process = spawn("python3", [ nodePath, name ]);
-	entry.instances = [];
-	entry.builtin = true;
-	entry.type = type;
-	entry.name = name;
-	entry.ID = type + ":" + name;
-
-	activeNodes.push(entry);
-	return entry;
+    spawn("python3", [ nodePath, name ])
 }
 
 app.get("/add/:builtintype/:name", (req, res) => {
@@ -261,10 +237,10 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
 	server.listen(4242, () => {
-		startBuiltinNode("test", "test1");
-		startBuiltinNode("time", "time1");
-		startBuiltinNode("day", "day1");
-		startBuiltinNode("loop", "loop1");
-		startBuiltinNode("program", "program1");
+		startBuiltinNode("NodeTest", "test1");
+		startBuiltinNode("NodeTime", "time1");
+		startBuiltinNode("NodeDay", "day1");
+		startBuiltinNode("NodeLoop", "loop1");
+		startBuiltinNode("NodeProgram", "program1");
 	})
 })
