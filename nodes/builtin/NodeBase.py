@@ -23,7 +23,9 @@ class node_base:
 
         # If the node takes no parameters, it's ready by default
         self.defaultReady = len(self.get_params_format()) == 0
-        self.instances = [ { "ready" : self.defaultReady, "params" : {}, "lastResult": False } ]
+        self.instances = [ { "ready" : self.defaultReady, "params" : {}, "lastResult": None } ]
+
+        self.control_reset_on_deactivate(True)
         self.__disable_control(0)
 
         print("Default ready", self.defaultReady)
@@ -112,16 +114,21 @@ class node_base:
 
         else:
             if(self.context == "control"):
-                self.__disable_control(instance)
+                # There may be a situation (Such as in NodeCounter) where
+                # it shouldn't reset the control nodes state when all dependencies
+                # are inactive because the state needs to persist.
+                if(self.reset_control):
+                    self.__disable_control(instance)
 
             else: self.deactivate(self.instances[instance]["params"])
 
-        message = {
-            "result" : value,
-            "instance" : instance
-        }
+        if(self.context == "action"):
+            message = {
+                "result" : value,
+                "instance" : instance
+            }
 
-        self.__respond(message)
+            self.__respond(message)
 
     def __respond(self, response):
         self.connection.sendall(bytes(json.dumps(response) + "\n", encoding="utf8"))
@@ -151,7 +158,7 @@ class node_base:
         # If the instance number is more than there are instances, add instances
         instance = int(p[0])
         for i in range(len(self.instances), instance + 1):
-            self.instances.append({ "ready" : self.defaultReady, "params" : {}, "lastResult": False })
+            self.instances.append({ "ready" : self.defaultReady, "params" : {}, "lastResult": None })
             self.__disable_control(len(self.instances) - 1)
 
         # Delete the ID from the incoming parameters
@@ -208,7 +215,7 @@ class node_base:
             if(not result["valid"]):
                 self.instances[instance]["params"] = {}
                 self.instances[instance]["ready"] = False
-                self.instances[instance]["lastResult"] = False
+                self.instances[instance]["lastResult"] = None
 
         self.__respond(result)
 
@@ -220,6 +227,9 @@ class node_base:
 
     def control_finish(self):
         self.__disable_control(self.current_instance)
+
+    def control_reset_on_deactivate(self, value):
+        self.reset_control = value
 
     def check(self, params):
         raise NotImplementedError()
