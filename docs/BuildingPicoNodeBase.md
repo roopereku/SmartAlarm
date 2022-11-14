@@ -6,7 +6,7 @@ Clone SmartAlarm and install picotool
 * `cd pico-sdk`
 * `git submodule update --init`
 * `cd ..`
-* `export PICO_SDK_PATH=$(pwd)/picosdk`
+* `export PICO_SDK_PATH=$(pwd)/pico-sdk`
 * `mkdir build`
 * `cd build`
 * `cmake .. -DNODE=nodename` (nodename could be NodeTest) \
