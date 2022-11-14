@@ -12,7 +12,7 @@ class node_base:
         print("Node %s" % (node_type))
 
         if(len(sys.argv) == 1):
-            print("Expected a name for node %s" % (nodetype))
+            print("Expected a name for node %s" % (node_type))
             quit(1)
     
         self.name = sys.argv[1]

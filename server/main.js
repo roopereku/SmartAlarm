@@ -100,7 +100,11 @@ ws.on("connection", (c) => {
 		}
 
 		else if(msg.cmd === "dependency") {
-			addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+			if (msg.arg[4]) {
+				addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+			} else {
+				removeDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+			}
 		}
 
 		else if(msg.cmd === "parameters") {
@@ -213,6 +217,21 @@ function addDependency(toID, toInstace, nodeID, nodeInstance) {
 
 	//	Immediately notify about possible state changes
 	trigger(dep.instances[nodeInstance])
+}
+
+function removeDependency(toID, toInstance, nodeID, nodeInstance) {
+	to = activeNodes.find((n) => toID === n.ID)
+	dep = activeNodes.find((n) => nodeID === n.ID)
+
+	const index = to.instances[toInstance].dependencies.indexOf(dep.instances[nodeInstance])
+	if (index > -1) {
+		to.instances[toInstance].dependencies.splice(index, 1)
+		console.log(to.ID, " instance ", toInstance, " no longer depends on ", dep.ID, " instance ", nodeInstance)
+	}
+
+	//	Immediately notify about possible state changes
+	trigger(dep.instances[nodeInstance])
+	trigger(to.instances[toInstance])
 }
 
 function startBuiltinNode(scriptName, name) {
