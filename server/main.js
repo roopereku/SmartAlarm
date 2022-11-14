@@ -57,6 +57,10 @@ const server = net.createServer((client) => {
 const httpServer = http.createServer(app).listen(3001)
 const ws = new webSocket.Server({ server: httpServer })
 
+function sendToNode(node, message) {
+	node.connection.write(message + "\n")
+}
+
 function sendToAll(json) {
 	ws.clients.forEach((client) => {
 		client.send(JSON.stringify(json));
@@ -91,6 +95,7 @@ ws.on("connection", (c) => {
 			if(node === undefined)
 				msg.error = true
 
+			//	FIXME Tell the node that an instance was created
 			else msg.result = createInstance(node)
 		}
 
@@ -100,7 +105,7 @@ ws.on("connection", (c) => {
 
 		else if(msg.cmd === "parameters") {
 			let node = activeNodes.find((n) => msg.arg[0] === n.ID);
-			node.connection.write(msg.arg[1] + " " + msg.arg[2])
+			sendToNode(node, msg.arg[1] + " " + msg.arg[2])
 
 			//	TODO when parameters have changed, it could prove useful to activate the instance
 		}
@@ -122,12 +127,12 @@ function handleActivate(instance) {
 
 		if(passed) {
 			console.log("activate", instance.parent.ID, "instance", instance.num);
-			instance.parent.connection.write(instance.num + " activate")
+			sendToNode(instance.parent, instance.num + " activate")
 		}
 
 		else {
 			console.log("deactivate", instance.parent.ID, "instance", instance.num);
-			instance.parent.connection.write(instance.num + " deactivate")
+			sendToNode(instance.parent, instance.num + " deactivate")
 		}
 	}
 }
@@ -241,6 +246,8 @@ app.listen(port, () => {
 		startBuiltinNode("NodeTime", "time1");
 		startBuiltinNode("NodeDay", "day1");
 		startBuiltinNode("NodeLoop", "loop1");
+		startBuiltinNode("NodeSleep", "sleep1");
+		startBuiltinNode("NodeCounter", "counter1");
 		startBuiltinNode("NodeProgram", "program1");
 	})
 })

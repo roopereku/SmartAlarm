@@ -3,26 +3,34 @@
 class NodeTest : public NodeBase
 {
 public:
-	NodeTest(const char* name) : NodeBase("test", name, true, 0)
+	NodeTest(const char* name) : NodeBase("blink", name, NodeContext::Action, 0)
 	{
+		for(int i = 2; i <= 4; i++)
+		{
+			gpio_init(i);
+			gpio_set_dir(i, GPIO_OUT);
+		}
 	}
 
-	bool check(Params& params) override
+	void activate(Params& params) override
 	{
-		return params["param1"] == "1";
+		printf("Activate\n");
+        gpio_put(atoi(params["which"].c_str()), 1);
+	}
+
+	void deactivate(Params& params) override
+	{
+		printf("Deactivate\n");
+        gpio_put(atoi(params["which"].c_str()), 0);
 	}
 
 	void setParamFormat(ParameterList& params) override
 	{
-		params["param1"];
-		params["param3"];
-		params["param2"];
+		params["which"].strictHints = true;
 
-		params[0].type = "int";
-		//params[0].strictHints = true;
-
-		params[0].addHint("hint1", "test hint 1");
-		params[0].addHint("hint2", "test hint 2");
+		params["which"].addHint("2", "Red");
+		params["which"].addHint("3", "Green");
+		params["which"].addHint("4", "Blue");
 	}
 
 	Status validateParams(Params& params) override

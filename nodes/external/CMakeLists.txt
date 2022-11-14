@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 3.12)
 
 message(STATUS ${NODE})
 if(NODE)
-	if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/nodes/${NODE}.cc)
+	set(NODE_PATH ${CMAKE_CURRENT_LIST_DIR}/nodes/${NODE}.cc)
+	message(STATUS ${NODE_PATH})
+	if(NOT EXISTS ${NODE_PATH})
 		message(FATAL_ERROR "No such node")
 	endif()
 else()
@@ -29,6 +31,7 @@ pico_sdk_init()
 FILE(GLOB Sources *.cc)
 add_executable(${PROJECT_NAME} 
 	${Sources}
+	${NODE_PATH}
 )
 
 # Create map/bin/hex/uf2 files

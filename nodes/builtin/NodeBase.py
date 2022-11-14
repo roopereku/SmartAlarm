@@ -49,7 +49,7 @@ class node_base:
             event = self.poller.poll(0)
             for desc, ev in event:
                 data = self.connection.recv(2048)
-                self.__handle_message(data)
+                self.__handle_single_messages(data)
 
             # Only sensors and control nodes call check and send messages
             if(self.context == "action"):
@@ -151,8 +151,16 @@ class node_base:
 
         return result
 
+    def __handle_single_messages(self, buffer):
+        p = buffer.decode("utf-8").split("\n")
+        for msg in p:
+            self.__handle_message(msg)
+
     def __handle_message(self, message):
-        p = message.decode("utf-8").split()
+        p = message.split()
+        if(len(p) == 0):
+            return
+
         print(p)
 
         # If the instance number is more than there are instances, add instances

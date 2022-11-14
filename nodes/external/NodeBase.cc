@@ -2,8 +2,8 @@
 
 #include <cctype>
 
-NodeBase::NodeBase(const char* nodeType, const char* name, bool isSensor, unsigned delay)
-	: type(nodeType), name(name), ID(std::string(nodeType) + ":" + name), delay(delay), isSensor(isSensor)
+NodeBase::NodeBase(const char* nodeType, const char* name, NodeContext context, unsigned delay)
+	: type(nodeType), name(name), ID(std::string(nodeType) + ":" + name), context(context), delay(delay)
 {
     stdio_init_all();
 
@@ -23,7 +23,10 @@ void NodeBase::handleMessage(const std::string& message)
 
 	//	If there's not enough instances, add more
 	if(instance >= instances.size())
-		instances.resize(instance, Instance(defaultReady));
+	{
+		instances.resize(instance + 1, Instance(defaultReady));
+		printf("Resized instances to %lu\n", instances.size());
+	}
 
 	bool valid = true;
 	std::string reason;
@@ -35,11 +38,11 @@ void NodeBase::handleMessage(const std::string& message)
 	if(p.size() - 1 == 0)
 		return;
 
-	else if(p[1] == "activate" && !isSensor)
+	else if(p[1] == "activate" && context != NodeContext::Sensor)
 		handleActivate(instance, true);
 
-	else if(p[1] == "deactivate" && !isSensor)
-		handleActivate(instance, true);
+	else if(p[1] == "deactivate" && context != NodeContext::Sensor)
+		handleActivate(instance, false);
 
 	//	Does the parameter count match
 	else if(p.size() - 1 != paramFormat.count())
@@ -51,17 +54,15 @@ void NodeBase::handleMessage(const std::string& message)
 	else
 	{
 		//	If this node isn't a sensor, call deactivate with the old parameters
-		if(!isSensor) handleActivate(instance, false);
+		if(context != NodeContext::Sensor)
+			handleActivate(instance, false);
 
 		for(size_t i = 1; i < p.size(); i++)
 		{
 			printf("Validate '%s'\n", paramFormat.key(i - 1).c_str());
 			ParameterInfo& param = paramFormat[i - 1];
 
-			printf("s %d\n", param.strictHints);
-
-			//	TODO Implement type checking
-
+			//	FIXME Make sure that there are hints
 			if(param.strictHints)
 			{
 				printf("'%s' strict\n", paramFormat.key(i - 1).c_str());
@@ -97,12 +98,12 @@ void NodeBase::handleMessage(const std::string& message)
 		{
 			instances[instance].params.clear();
 			instances[instance].ready = false;
-			instances[instance].lastResult = false;
+			instances[instance].lastResult = -1;
 		}
 	}
 
-	std::string json = std::string("{valid: ") + (valid ? "true" : "false") + ", reason: \"" + reason + "\"" + 
-					", instance: " + std::to_string(instance) + "}";
+	std::string json = std::string("{\"valid\": ") + (valid ? "true" : "false") + ", \"reason\": \"" + reason +
+					"\", \"instance\": " + std::to_string(instance) + "}";
 
 	respond(json);
 }
@@ -118,10 +119,12 @@ void NodeBase::handleActivate(size_t instance, bool active)
 		return;
 
 	instances[instance].activated = active;
+
+	printf("activate %d instance %lu\n", active, instance);
 	if(active) activate(instances[instance].params);
 	else deactivate(instances[instance].params);
 
-	std::string json = std::string("{ result: ") + (active ? "true" : "false") + ", instance: " + std::to_string(instance) + "}";
+	std::string json = std::string("{\"result\": ") + (active ? "true" : "false") + ", \"instance\": " + std::to_string(instance) + "}";
 	respond(json);
 }
 
@@ -129,16 +132,26 @@ void NodeBase::respondFormat()
 {
 	std::string formatJSON;
 	for(size_t i = 0; i < paramFormat.count(); i++)
-		formatJSON += std::string(paramFormat.key(i)) + ": " + paramFormat[i].toJSON() + ",";
+		formatJSON += '"' + paramFormat.key(i) + "\": " + paramFormat[i].toJSON() + ",";
 
-	formatJSON.pop_back();
-	std::string json =	"{format: {" + formatJSON + "}, sensor: " + (isSensor ? "true" : "false") + "id: " + ID + "}";
+	if(formatJSON.size() > 0)
+		formatJSON.pop_back();
+
+	std::string contextString;
+
+	switch(context)
+	{
+		case NodeContext::Sensor: contextString = "sensor"; break;
+		case NodeContext::Action: contextString = "action"; break;
+	}
+
+	std::string json =	"{\"format\": {" + formatJSON + "}, \"context\": \"" + contextString + "\", \"id\": \"" + ID + "\", \"name\": \"" + name + "\", \"type\": \"" + type + "\"}";
 	respond(json);
 }
 
 void NodeBase::respond(std::string& message)
 {
-	tcp.sendMessage(message);
+	tcp.sendMessage(message + '\n');
 }
 
 void NodeBase::run()
@@ -154,7 +167,13 @@ void NodeBase::run()
 
 	tcp.onMessage = [this](const std::string& message)
 	{
-		handleMessage(message);
+		auto p = split(message, '\n');
+
+		for(auto& msg : p)
+		{
+			if(!msg.empty())
+				handleMessage(msg);
+		}
 	};
 
 	setParamFormat(paramFormat);
@@ -167,7 +186,7 @@ void NodeBase::run()
 	{
 		tcp.update();
 
-		if(!isSensor)
+		if(context == NodeContext::Action)
 		{
 			sleep_ms(1);
 			continue;
@@ -183,7 +202,7 @@ void NodeBase::run()
 
 				if(result != instances[i].lastResult)
 				{
-					std::string json = std::string("{ result: ") + (result ? "true" : "false") + ", instance: " + std::to_string(i) + "}";
+					std::string json = std::string("{\"result\": ") + (result ? "true" : "false") + ", \"instance\": " + std::to_string(i) + "}";
 					respond(json);
 				}
 

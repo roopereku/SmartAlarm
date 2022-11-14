@@ -100,7 +100,7 @@ err_t TCPClient::sent(void* arg, tcp_pcb* pcb, u16_t len)
 
 err_t TCPClient::poll(void* arg, tcp_pcb* pcb)
 {
-	printf("tcp_client_poll\n");
+	//printf("tcp_client_poll\n");
 	return ERR_OK;
 }
 

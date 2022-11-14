@@ -15,10 +15,16 @@
 
 typedef std::unordered_map <std::string, std::string> Params;
 
+enum class NodeContext
+{
+	Sensor,
+	Action
+};
+
 class NodeBase
 {
 public:
-	NodeBase(const char* nodeType, const char* name, bool isSensor, unsigned delay = 1000);
+	NodeBase(const char* nodeType, const char* name, NodeContext context, unsigned delay = 1000);
 
 	virtual bool check(Params& params) { return true; }
 	virtual void deactivate(Params& params) {}
@@ -42,7 +48,7 @@ private:
 		Params params;
 		bool ready = false;
 
-		bool lastResult = false;
+		int lastResult = -1;
 		bool activated = false;
 	};
 
@@ -58,9 +64,8 @@ private:
 	ParameterList paramFormat;
 	std::vector <Instance> instances;
 
-	bool isSensor;
+	NodeContext context;
 	bool defaultReady;
-
 	unsigned delay;
 
 protected:
