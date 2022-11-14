@@ -1,9 +1,12 @@
 #include "TCPClient.hh"
 
-#define TEST_TCP_SERVER_IP "192.168.1.145"
+//#define TEST_TCP_SERVER_IP "192.168.1.145"
+//#define WIFI_SSID "E-P:n kone ja tarvike"
+//#define WIFI_PASSWORD "M3YG3RD9LMBDA"
 
-#define WIFI_SSID "E-P:n kone ja tarvike"
-#define WIFI_PASSWORD "M3YG3RD9LMBDA"
+#define TEST_TCP_SERVER_IP "192.168.91.111"
+#define WIFI_SSID "OnePlus Nord N10 5G"
+#define WIFI_PASSWORD "salsasana666"
 
 #define TCP_PORT 4242
 

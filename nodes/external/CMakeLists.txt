@@ -46,6 +46,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME} 
     pico_stdlib
 	pico_cyw43_arch_lwip_poll
+	hardware_adc
 )
 
 # Enable usb output, disable uart output
