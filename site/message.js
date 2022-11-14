@@ -63,7 +63,14 @@ function setParameters(node, params) {
 function addDependency(to, node) {
 	sendMessage({
 		cmd: "dependency",
-		arg: [ to.name, to.data.instance, node.name, node.data.instance ]
+		arg: [ to.name, to.data.instance, node.name, node.data.instance, true ]
+	})
+}
+
+function removeDependency(to, node) {
+	sendMessage({
+		cmd: "dependency",
+		arg: [ to.name, to.data.instance, node.name, node.data.instance, false ]
 	})
 }
 

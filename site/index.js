@@ -86,7 +86,7 @@ editor.start();
 
 // Events!
 editor.on('nodeCreated', function(id) {
-  console.log("Node created " + id);
+	console.log("Node created " + id);
 	let node = editor.getNodeFromId(id)
 	addInstance(node)
 })
@@ -120,8 +120,13 @@ editor.on('connectionCreated', function(connection) {
 })
 
 editor.on('connectionRemoved', function(connection) {
-  console.log('Connection removed');
-  console.log(connection);
+	console.log('Connection removed');
+
+	from = editor.getNodeFromId(connection.output_id)
+	to = editor.getNodeFromId(connection.input_id)
+
+	console.log(from)
+	removeDependency(to, from)
 })
 /*
 editor.on('mouseMove', function(position) {
@@ -203,7 +208,7 @@ function addNodeToDrawFlow(id, pos_x, pos_y) {
 	console.log(type, name)
 
 	let html = '<div><div class="title-box"><i class="fab fa-telegram-plane"></i> ' + name +
-				'<button type="button" onclick=updateParameters(this)>Update</button>' + '</div><div class="box">'
+				'</div><div class="box"><form onchange=updateParameters(this) onsubmit="return false">'
 
 	for (const [nodeType, format] of Object.entries(nodeFormats)) {
 		if(nodeType == type)
@@ -214,7 +219,8 @@ function addNodeToDrawFlow(id, pos_x, pos_y) {
 
 				if(param.strict) {
 
-					html += '<select class="nodeValue">'
+					html += '<select class="nodeValue" required>'
+					html += '<option hidden selected></option>'
 
 					for (const [k, p] of Object.entries(param.hint))
 						html += '<option value="' + k + '">' + p + '</option>'
@@ -227,7 +233,7 @@ function addNodeToDrawFlow(id, pos_x, pos_y) {
 				}
 			}
 
-			html += '</div></div>'
+			html += '</div></form></div>'
 
 			let count = editor.getNodesFromName(type + ":" + name).length
 			editor.addNode(type + ":" + name, 1, 1, pos_x, pos_y, type, { instance: count }, html );
