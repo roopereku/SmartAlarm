@@ -33,8 +33,8 @@ class node_base:
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connection.connect((server_ip, server_port))
 
-        self.poller = select.poll()
-        self.poller.register(self.connection, select.POLLIN)
+        #self.poller = select.poll()
+        #self.poller.register(self.connection, select.POLLIN)
 
         # Send out relevant information
         self.__respond({
@@ -46,14 +46,19 @@ class node_base:
         })
 
         while(True):
-            event = self.poller.poll(0)
-            for desc, ev in event:
+            #event = self.poller.poll(0)
+            #for desc, ev in event:
+            #    data = self.connection.recv(2048)
+            #    self.__handle_single_messages(data)
+
+            # Because Windows doesn't support poll(), use select() here
+            inputs, _, _ = select.select([self.connection], [],[], 0.01)
+            for inp in inputs:
                 data = self.connection.recv(2048)
                 self.__handle_single_messages(data)
 
             # Only sensors and control nodes call check and send messages
             if(self.context == "action"):
-                time.sleep(0.01)
                 continue
 
             should_sleep = False
@@ -85,9 +90,6 @@ class node_base:
             # Sleep for the user specified amount
             if(should_sleep):
                 time.sleep(delay)
-
-            # Minimize CPU usage but don't have a big delay
-            else: time.sleep(0.01)
 
     def __handle_activate(self, instance, value):
         print(value, " Passed to __handle_activate")
