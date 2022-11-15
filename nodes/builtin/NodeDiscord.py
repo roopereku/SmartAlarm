@@ -26,6 +26,9 @@ class node_discord(node_base):
             }
         }
 
+def run_node():
+    node = node_discord("discord", 0.5, "action")
+
 class message_watcher(commands.Cog):
     def __init__(self, client):
         self.client = client
@@ -34,28 +37,27 @@ class message_watcher(commands.Cog):
     @tasks.loop(seconds = 1)
     async def loop(self):
         global message_queue
-        print(message_queue)
+        if(len(message_queue) > 0):
+            message = message_queue[0]
+            message_queue.pop(0)
 
-def run_bot():
-    load_dotenv()
-    TOKEN = os.getenv('DISCORD_TOKEN')
+            channel = client.get_channel(1042017018825678878)
+            await channel.send(message)
 
+class node_bot(commands.Bot):
+    def __init__(self):
+        intents = discord.Intents.default()
+        commands.Bot.__init__(self, command_prefix=".", intents=intents)
 
-    intents = discord.Intents.default()
-    client = discord.Bot(intents = intents)
-    @client.event
-    async def on_ready():
-        print("connected")
-
-    client.add_cog(message_watcher(client))
-    client.run(TOKEN)
-
-
-
-def run_node():
-    node = node_discord("discord", 0.5, "action")
+    async def on_ready(self):
+        print("Connected")
+        await self.add_cog(message_watcher(self))
 
 node_thread = threading.Thread(target = run_node)
 node_thread.start()
 
-run_bot()
+load_dotenv()
+TOKEN = os.getenv('DISCORD_TOKEN')
+
+client = node_bot()
+client.run(TOKEN)
