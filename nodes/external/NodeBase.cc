@@ -15,8 +15,11 @@ void NodeBase::handleMessage(const std::string& message)
 {
 	printf("Handle '%s'\n", message.c_str());
 
-	auto p = split(message, ' ');
+	auto p = split(message, '\r');
 	if(p.empty()) return;
+
+	for(size_t i = 1; i < p.size(); i++)
+		printf("param '%s'\n", p[i].c_str());
 
 	size_t instance = atoi(p[0].c_str());
 	printf("Instance %lu\n", instance);
@@ -30,9 +33,6 @@ void NodeBase::handleMessage(const std::string& message)
 
 	bool valid = true;
 	std::string reason;
-
-	for(size_t i = 1; i < p.size(); i++)
-		printf("param '%s'\n", p[i].c_str());
 
 	//	Ignore empty messages
 	if(p.size() - 1 == 0)

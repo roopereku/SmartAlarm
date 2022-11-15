@@ -109,9 +109,11 @@ ws.on("connection", (c) => {
 
 		else if(msg.cmd === "parameters") {
 			let node = activeNodes.find((n) => msg.arg[0] === n.ID);
-			sendToNode(node, msg.arg[1] + " " + msg.arg[2])
 
-			//	TODO when parameters have changed, it could prove useful to activate the instance
+			/*	Because the node deactivates itself when it receives new parameters,
+			 *	reactivate it if it should be active */
+			sendToNode(node, msg.arg[1] + "\r" + msg.arg[2])
+			handleActivate(node.instances[msg.arg[1]])
 		}
 
 		sendToAll(msg);
@@ -131,12 +133,12 @@ function handleActivate(instance) {
 
 		if(passed) {
 			console.log("activate", instance.parent.ID, "instance", instance.num);
-			sendToNode(instance.parent, instance.num + " activate")
+			sendToNode(instance.parent, instance.num + "\ractivate")
 		}
 
 		else {
 			console.log("deactivate", instance.parent.ID, "instance", instance.num);
-			sendToNode(instance.parent, instance.num + " deactivate")
+			sendToNode(instance.parent, instance.num + "\rdeactivate")
 		}
 	}
 }

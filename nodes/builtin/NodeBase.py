@@ -156,10 +156,11 @@ class node_base:
     def __handle_single_messages(self, buffer):
         p = buffer.decode("utf-8").split("\n")
         for msg in p:
-            self.__handle_message(msg)
+            if(len(msg) > 0):
+                self.__handle_message(msg)
 
     def __handle_message(self, message):
-        p = message.split()
+        p = message.split("\r")
         if(len(p) == 0):
             return
 

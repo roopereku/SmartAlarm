@@ -19,7 +19,7 @@ function updateParameters(e) {
 	let valid = 0
 
 	values.forEach((v) => {
-		paramString += v.value + " "
+		paramString += v.value + "\r"
 		valid += v.reportValidity()
 	})
 
