@@ -3,6 +3,8 @@ Setup tools to build and flash Raspberry Pi Pico W with CLion IDE. This guide pa
 
 ## Setup tools for Windows 11 development
 - Install Git
+- Install Build Tools for Visual Studio 2022
+  - Select Desktop development with C++ and install
 - Install CMake
   -  Add to the system PATH for all users
 - Install JetBrains CLion
@@ -44,3 +46,10 @@ Clone SmartAlarm and open terminal tab in CLion. If you clone with CLion it will
   - The file is located in SmartAlarm/docs/
 - Set Download to Always and Reset to Init
 - Click Apply and OK
+
+### Setup Pico
+- Plug-in Pico usb while pressing BOOTSEL button
+- From <https://github.com/majbthrd/pico-debug/releases> download pico-debug-gimmecache.uf2
+- Copy the downloaded file to Pico
+  - Pico should show as mass storage device in file explorer 
+- Now you can click Debug button to build, flash and debug
