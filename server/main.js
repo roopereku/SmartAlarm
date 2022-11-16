@@ -50,9 +50,9 @@ const server = net.createServer((client) => {
 			{
 				//	Find the node that this message is from and see if it passef
 				let node = activeNodes.find((n) => client === n.connection)
-				node.instances[msg.instance].passed = msg.result
+				findInstance(node, msg.instance).passed = msg.result
 
-				trigger(node.instances[msg.instance])
+				trigger(findInstance(node, msg.instance))
 			}
 		})
 	})
@@ -83,6 +83,16 @@ function informAboutNode(node, client) {
 	client.send(JSON.stringify(msg));
 }
 
+function findInstance(node, num) {
+	for(let i = 0; i < node.instances.length; i++) {
+		if(node.instances[i].num == num)
+			return node.instances[i]
+	}
+
+	console.log("Couldn't find instance", node.ID, num)
+	return undefined
+}
+
 ws.on("connection", (c) => {
 	activeNodes.forEach((n) => {
 		informAboutNode(n, c)
@@ -111,8 +121,8 @@ ws.on("connection", (c) => {
 				msg.error = true
 
 			else {
-				msg.result = createInstance(node)
 				sendToNode(node, msg.arg[1] + "\r" + "instance")
+				msg.result = createInstance(node, msg.arg[1])
 
 				nodeValues[ID][msg.arg[1]] = ""
 				console.log(nodeValues)
@@ -120,11 +130,11 @@ ws.on("connection", (c) => {
 		}
 
 		else if(msg.cmd === "depend") {
-			if (msg.arg[4]) {
-				addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
-			} else {
-				removeDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
-			}
+			addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+		}
+
+		else if(msg.cmd == "undepend") {
+			removeDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
 		}
 
 		else if(msg.cmd === "parameters") {
@@ -133,7 +143,7 @@ ws.on("connection", (c) => {
 			/*	Because the node deactivates itself when it receives new parameters,
 			 *	reactivate it if it should be active */
 			sendToNode(node, msg.arg[1] + "\r" + msg.arg[2])
-			handleActivate(node.instances[msg.arg[1]])
+			handleActivate(findInstance(node, msg.arg[1]))
 
 			nodeValues[msg.arg[0]][msg.arg[1]] = msg.arg[2]
 			console.log(nodeValues)
@@ -219,13 +229,13 @@ function forDependantInstances(instance, callback) {
 	})
 }
 
-function createInstance(node) {
+function createInstance(node, num) {
 	let entry = {}
 
 	entry.dependencies = [];
 	entry.passed = false;
 	entry.parent = node
-	entry.num = node.instances.length
+	entry.num = num
 
 	node.instances.push(entry)
 	console.log("Created instance", entry.num, "for", node.ID)
@@ -233,30 +243,35 @@ function createInstance(node) {
 	return entry.num
 }
 
-function addDependency(toID, toInstace, nodeID, nodeInstance) {
+function addDependency(toID, toInstance, nodeID, nodeInstance) {
 	to = activeNodes.find((n) => toID === n.ID)
 	dep = activeNodes.find((n) => nodeID === n.ID)
 
-	to.instances[toInstace].dependencies.push(dep.instances[nodeInstance])
-	console.log(to.ID, " instance ", toInstace, " now depends on ", dep.ID, " instance ", nodeInstance)
+	findInstance(to, toInstance).dependencies.push(findInstance(dep, nodeInstance))
+	console.log(to.ID, " instance ", toInstance, " now depends on ", dep.ID, " instance ", nodeInstance)
 
 	//	Immediately notify about possible state changes
-	trigger(dep.instances[nodeInstance])
+	trigger(findInstance(dep, nodeInstance))
 }
 
-function removeDependency(toID, toInstance, nodeID, nodeInstance) {
-	to = activeNodes.find((n) => toID === n.ID)
+function removeDependency(fromID, fromInstance, nodeID, nodeInstance) {
+	from = activeNodes.find((n) => fromID === n.ID)
 	dep = activeNodes.find((n) => nodeID === n.ID)
 
-	const index = to.instances[toInstance].dependencies.indexOf(dep.instances[nodeInstance])
+	const index = findInstance(from, fromInstance).dependencies.indexOf(findInstance(dep, nodeInstance))
+
 	if (index > -1) {
-		to.instances[toInstance].dependencies.splice(index, 1)
-		console.log(to.ID, " instance ", toInstance, " no longer depends on ", dep.ID, " instance ", nodeInstance)
+		findInstance(from, fromInstance).dependencies.splice(index, 1)
+		console.log(from.ID, " instance ", fromInstance, " no longer depends on ", dep.ID, " instance ", nodeInstance)
+
+		//	Immediately notify about possible state changes
+		trigger(findInstance(dep, nodeInstance))
+		trigger(findInstance(from, fromInstance))
+
+		return
 	}
 
-	//	Immediately notify about possible state changes
-	trigger(dep.instances[nodeInstance])
-	trigger(to.instances[toInstance])
+	console.log("no dependency to begin with")
 }
 
 function startBuiltinNode(scriptName, name) {
@@ -267,19 +282,6 @@ function startBuiltinNode(scriptName, name) {
     spawn("python3", [ nodePath, name ])
 }
 
-app.get("/add/:builtintype/:name", (req, res) => {
-	const ID = req.params.builtintype + ":" + req.params.name;
-	node = activeNodes.find((n) => ID === n.ID)
-
-	if(node === undefined)
-	{
-		res.send("No node called " + ID);
-		return;
-	}
-
-	res.send(createInstance(node).toString());
-})
-
 app.get('/', (req, res) => {
     res.sendFile(__dirname + "/../site/index.html")
 })
@@ -288,10 +290,10 @@ app.listen(port, () => {
 	server.listen(4242, () => {
 		startBuiltinNode("NodeTest", "test1");
 		startBuiltinNode("NodeTime", "time1");
-		//startBuiltinNode("NodeDay", "day1");
-		//startBuiltinNode("NodeLoop", "loop1");
-		//startBuiltinNode("NodeSleep", "sleep1");
-		//startBuiltinNode("NodeCounter", "counter1");
-		//startBuiltinNode("NodeProgram", "program1");
+		startBuiltinNode("NodeDay", "day1");
+		startBuiltinNode("NodeLoop", "loop1");
+		startBuiltinNode("NodeSleep", "sleep1");
+		startBuiltinNode("NodeCounter", "counter1");
+		startBuiltinNode("NodeProgram", "program1");
 	})
 })
