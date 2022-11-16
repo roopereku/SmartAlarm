@@ -328,12 +328,12 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
 	server.listen(4242, () => {
-		//startBuiltinNode("NodeTest", "test1");
-		//startBuiltinNode("NodeTime", "time1");
-		//startBuiltinNode("NodeDay", "day1");
-		//startBuiltinNode("NodeLoop", "loop1");
-		//startBuiltinNode("NodeSleep", "sleep1");
-		//startBuiltinNode("NodeCounter", "counter1");
-		//startBuiltinNode("NodeProgram", "program1");
+		startBuiltinNode("NodeTest", "test1");
+		startBuiltinNode("NodeTime", "time1");
+		startBuiltinNode("NodeDay", "day1");
+		startBuiltinNode("NodeLoop", "loop1");
+		startBuiltinNode("NodeSleep", "sleep1");
+		startBuiltinNode("NodeCounter", "counter1");
+		startBuiltinNode("NodeProgram", "program1");
 	})
 })

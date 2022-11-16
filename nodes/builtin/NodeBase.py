@@ -184,10 +184,13 @@ class node_base:
         print(instance)
 
         if(p[0] == "removeinstance"):
-            for i in self.instances:
-                if(instance["num"] == i["num"]):
-                    print("Remove", instance, i["num"])
+            for i in range(len(self.instances)):
+                if(instance["num"] == self.instances[i]["num"]):
+                    print("Remove", instance, self.instances[i]["num"])
+                    self.instances.pop(i)
                     break
+
+            print("INSTANCES", self.instances)
 
         # Is the first parameter "activate" and is this node a sensor
         elif(p[0] == "activate" and self.context != "sensor"):

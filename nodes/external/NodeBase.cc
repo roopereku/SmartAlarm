@@ -44,7 +44,20 @@ void NodeBase::handleMessage(const std::string& message)
 
 	Instance& instance = findInstance(instanceNumber);
 
-	if(p[1] == "activate" && context != NodeContext::Sensor)
+	if(p[1] == "removeinstance")
+	{
+		for(size_t i = 0; i < instances.size(); i++)
+		{
+			if(instances[i].num == instance.num)
+			{
+				printf("Remove instance %lu\n", instance.num);
+				instances.erase(instances.begin() + i);
+				break;
+			}
+		}
+	}
+
+	else if(p[1] == "activate" && context != NodeContext::Sensor)
 		handleActivate(instance, true);
 
 	else if(p[1] == "deactivate" && context != NodeContext::Sensor)
