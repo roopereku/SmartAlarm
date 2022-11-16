@@ -1,6 +1,6 @@
 /*
  * TODO: Make class and inherit BaseNode
- * TODO: Sleep until water is detected?
+ * TODO: Modify to sleep until i2c is receiving data
  */
 
 #include <cstdio>
@@ -58,6 +58,7 @@ int main() {
                 sleep_ms(250);
             }
         }
+        sleep_ms(10000); // 10 seconds
     }
     return 0;
 #endif
