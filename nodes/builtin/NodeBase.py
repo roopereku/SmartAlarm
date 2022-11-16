@@ -27,8 +27,6 @@ class node_base:
         self.instances = []
 
         self.control_reset_on_deactivate(True)
-        self.__disable_control(0)
-
         print("Default ready", self.defaultReady)
 
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -253,7 +251,7 @@ class node_base:
         return None
 
     def control_finish(self):
-        self.__disable_control(self.current_instance)
+        self.__disable_control(self.find_instance(self.current_instance))
 
     def control_reset_on_deactivate(self, value):
         self.reset_control = value
