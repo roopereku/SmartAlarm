@@ -11,6 +11,14 @@ node_modules
 .idea/**/dictionaries
 .idea/**/shelf
 
+# CLion specific stuff
+.idea/.gitignore
+.idea/.name
+.idea/misc.xml
+.idea/modules.xml
+.idea/SmartAlarm.iml
+.idea/vcs.xml
+
 # AWS User-specific
 .idea/**/aws.xml
 
