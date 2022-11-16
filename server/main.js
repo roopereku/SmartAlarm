@@ -9,6 +9,9 @@ const app = express()
 
 app.use(express.static(__dirname + "/../site/"))
 
+let nodeValues = {}
+let layout = {}
+
 const server = net.createServer((client) => {
 	console.log("Connection from ", client.remoteAddress)
 
@@ -39,6 +42,7 @@ const server = net.createServer((client) => {
 				node.connection = client
 
 				activeNodes.push(node);
+				nodeValues[node.ID] = {}
 			}
 
 			//	Is result present
@@ -88,18 +92,34 @@ ws.on("connection", (c) => {
 		const msg = JSON.parse(payload.toString())
 		console.log(msg)
 
-		if(msg.cmd === "instance") {
+		if(msg.cmd === "getlayout") {
+			msg.result = [
+				layout,
+				nodeValues
+			]
+		}
+
+		if(msg.cmd === "layout") {
+			layout = msg.arg[0]
+		}
+
+		else if(msg.cmd === "instance") {
 			const ID = msg.arg[0]
 			node = activeNodes.find((n) => ID === n.ID);
 
 			if(node === undefined)
 				msg.error = true
 
-			//	FIXME Tell the node that an instance was created
-			else msg.result = createInstance(node)
+			else {
+				msg.result = createInstance(node)
+				sendToNode(node, msg.arg[1] + "\r" + "instance")
+
+				nodeValues[ID][msg.arg[1]] = ""
+				console.log(nodeValues)
+			}
 		}
 
-		else if(msg.cmd === "dependency") {
+		else if(msg.cmd === "depend") {
 			if (msg.arg[4]) {
 				addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
 			} else {
@@ -114,6 +134,9 @@ ws.on("connection", (c) => {
 			 *	reactivate it if it should be active */
 			sendToNode(node, msg.arg[1] + "\r" + msg.arg[2])
 			handleActivate(node.instances[msg.arg[1]])
+
+			nodeValues[msg.arg[0]][msg.arg[1]] = msg.arg[2]
+			console.log(nodeValues)
 		}
 
 		sendToAll(msg);
@@ -265,10 +288,10 @@ app.listen(port, () => {
 	server.listen(4242, () => {
 		startBuiltinNode("NodeTest", "test1");
 		startBuiltinNode("NodeTime", "time1");
-		startBuiltinNode("NodeDay", "day1");
-		startBuiltinNode("NodeLoop", "loop1");
-		startBuiltinNode("NodeSleep", "sleep1");
-		startBuiltinNode("NodeCounter", "counter1");
-		startBuiltinNode("NodeProgram", "program1");
+		//startBuiltinNode("NodeDay", "day1");
+		//startBuiltinNode("NodeLoop", "loop1");
+		//startBuiltinNode("NodeSleep", "sleep1");
+		//startBuiltinNode("NodeCounter", "counter1");
+		//startBuiltinNode("NodeProgram", "program1");
 	})
 })
