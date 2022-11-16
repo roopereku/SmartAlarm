@@ -23,7 +23,6 @@ class node_base:
 
         # If the node takes no parameters, it's ready by default
         self.defaultReady = len(self.get_params_format()) == 0
-        #self.instances = [ { "ready" : self.defaultReady, "params" : {}, "lastResult": None } ]
         self.instances = []
 
         self.control_reset_on_deactivate(True)
@@ -31,9 +30,6 @@ class node_base:
 
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connection.connect((server_ip, server_port))
-
-        #self.poller = select.poll()
-        #self.poller.register(self.connection, select.POLLIN)
 
         # Send out relevant information
         self.__respond({
@@ -45,12 +41,8 @@ class node_base:
         })
 
         while(True):
-            #event = self.poller.poll(0)
-            #for desc, ev in event:
-            #    data = self.connection.recv(2048)
-            #    self.__handle_single_messages(data)
-
-            # Because Windows doesn't support poll(), use select() here
+            # Because Windows doesn't support poll(), use select() here.
+            # Select will tell us when the server has sent us a message
             inputs, _, _ = select.select([self.connection], [],[], 0.01)
             for inp in inputs:
                 data = self.connection.recv(2048)
@@ -168,6 +160,7 @@ class node_base:
         print(p)
 
         instance_number = int(p[0])
+        print("Number", instance_number)
 
         # Delete the instance number from the incoming parameters
         del p[0]
@@ -176,6 +169,7 @@ class node_base:
         if(len(p) == 0):
             return
 
+        # FIXME The instancing command probably should respond to the server
         if(p[0] == "instance"):
             self.instances.append({"ready" : self.defaultReady, "params" : {}, "lastResult" : None, "num" : instance_number })
             instance = self.instances[-1]
@@ -189,8 +183,14 @@ class node_base:
         instance = self.find_instance(instance_number)
         print(instance)
 
+        if(p[0] == "removeinstance"):
+            for i in self.instances:
+                if(instance["num"] == i["num"]):
+                    print("Remove", instance, i["num"])
+                    break
+
         # Is the first parameter "activate" and is this node a sensor
-        if(p[0] == "activate" and self.context != "sensor"):
+        elif(p[0] == "activate" and self.context != "sensor"):
             return self.__handle_activate(instance, True)
 
         elif(p[0] == "deactivate" and self.context != "sensor"):

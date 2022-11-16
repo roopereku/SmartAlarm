@@ -129,6 +129,46 @@ ws.on("connection", (c) => {
 			}
 		}
 
+		else if(msg.cmd === "removeinstance") {
+			let node = undefined
+			let instance = undefined
+
+			console.log(layout)
+
+			/*	Because drawflow actually removes a node before it tells the user about it,
+			 *	we need to fetch information about the instance from an old version of the layout */
+			checkLoop:
+			for (const [modName, module] of Object.entries(layout.drawflow)) {
+				for (const [key, value] of Object.entries(module.data)) {
+					if(key === msg.arg[0].toString()) {
+						console.log("Found")
+						node = activeNodes.find((n) => value.name === n.ID)
+						instance = findInstance(node, value.data.instance)
+						break checkLoop
+					}
+				}
+			}
+
+			if(instance === undefined) {
+				console.log("Instance is undefined when removing")
+			}
+
+			else {
+				const index = node.instances.indexOf(instance)
+
+				if(index > -1) {
+					console.log("Removed instance", node.ID, instance.num)
+					sendToNode(node, instance.num + "\r" + "removeinstance")
+
+					delete nodeValues[node.ID][instance.num]
+					console.log(nodeValues[node.ID], instance.num)
+					node.instances.splice(index, 1)
+				}
+
+				else console.log("Index -1")
+			}
+		}
+
 		else if(msg.cmd === "depend") {
 			addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
 		}
@@ -288,12 +328,12 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
 	server.listen(4242, () => {
-		startBuiltinNode("NodeTest", "test1");
-		startBuiltinNode("NodeTime", "time1");
-		startBuiltinNode("NodeDay", "day1");
-		startBuiltinNode("NodeLoop", "loop1");
-		startBuiltinNode("NodeSleep", "sleep1");
-		startBuiltinNode("NodeCounter", "counter1");
-		startBuiltinNode("NodeProgram", "program1");
+		//startBuiltinNode("NodeTest", "test1");
+		//startBuiltinNode("NodeTime", "time1");
+		//startBuiltinNode("NodeDay", "day1");
+		//startBuiltinNode("NodeLoop", "loop1");
+		//startBuiltinNode("NodeSleep", "sleep1");
+		//startBuiltinNode("NodeCounter", "counter1");
+		//startBuiltinNode("NodeProgram", "program1");
 	})
 })

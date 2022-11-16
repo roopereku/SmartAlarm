@@ -79,8 +79,17 @@ function removeDependency(from, node) {
 }
 
 function addInstance(node) {
+	console.log("adding instance", node.data.instance)
+
 	sendMessage({
 		cmd: "instance",
 		arg: [ node.name, node.data.instance ]
+	})
+}
+
+function removeInstance(id) {
+	sendMessage({
+		cmd: "removeinstance",
+		arg: [ id ]
 	})
 }
