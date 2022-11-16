@@ -15,30 +15,36 @@ void NodeBase::handleMessage(const std::string& message)
 {
 	printf("Handle '%s'\n", message.c_str());
 
-	auto p = split(message, ' ');
+	auto p = split(message, '\r');
 	if(p.empty()) return;
-
-	size_t instance = atoi(p[0].c_str());
-	printf("Instance %lu\n", instance);
-
-	//	If there's not enough instances, add more
-	if(instance >= instances.size())
-	{
-		instances.resize(instance + 1, Instance(defaultReady));
-		printf("Resized instances to %lu\n", instances.size());
-	}
-
-	bool valid = true;
-	std::string reason;
 
 	for(size_t i = 1; i < p.size(); i++)
 		printf("param '%s'\n", p[i].c_str());
+
+	size_t instanceNumber = atoi(p[0].c_str());
+	printf("Instance %lu\n", instanceNumber);
+
+	bool valid = true;
+	std::string reason;
 
 	//	Ignore empty messages
 	if(p.size() - 1 == 0)
 		return;
 
-	else if(p[1] == "activate" && context != NodeContext::Sensor)
+	if(p[1] == "instance")
+	{
+		instances.emplace_back(defaultReady, instanceNumber);
+		Instance& instance = instances.back();
+
+		//	TODO Control not yet implemented
+		//self.__disable_control(instance)
+		printf("Added instance %lu, really %lu", instance.num, instances.size());
+		return;
+	}
+
+	Instance& instance = findInstance(instanceNumber);
+
+	if(p[1] == "activate" && context != NodeContext::Sensor)
 		handleActivate(instance, true);
 
 	else if(p[1] == "deactivate" && context != NodeContext::Sensor)
@@ -79,13 +85,13 @@ void NodeBase::handleMessage(const std::string& message)
 				}
 			}
 
-			instances[instance].params[paramFormat.key(i - 1)] = p[i];
+			instance.params[paramFormat.key(i - 1)] = p[i];
 		}
 
 		if(valid)
 		{
-			Status s = validateParams(instances[instance].params);
-			instances[instance].ready = true;
+			Status s = validateParams(instance.params);
+			instance.ready = true;
 
 			if(!s.success)
 			{
@@ -96,35 +102,35 @@ void NodeBase::handleMessage(const std::string& message)
 
 		if(!valid)
 		{
-			instances[instance].params.clear();
-			instances[instance].ready = false;
-			instances[instance].lastResult = -1;
+			instance.params.clear();
+			instance.ready = false;
+			instance.lastResult = -1;
 		}
 	}
 
 	std::string json = std::string("{\"valid\": ") + (valid ? "true" : "false") + ", \"reason\": \"" + reason +
-					"\", \"instance\": " + std::to_string(instance) + "}";
+					"\", \"instance\": " + std::to_string(instance.num) + "}";
 
 	respond(json);
 }
 
-void NodeBase::handleActivate(size_t instance, bool active)
+void NodeBase::handleActivate(Instance& instance, bool active)
 {
 	//	If the node is already in the given state, do nothing
-	if(instances[instance].activated == active)
+	if(instance.activated == active)
 		return;
 
 	//	Do nothing if parameters aren't set
-	if(!instances[instance].ready)
+	if(!instance.ready)
 		return;
 
-	instances[instance].activated = active;
+	instance.activated = active;
 
-	printf("activate %d instance %lu\n", active, instance);
-	if(active) activate(instances[instance].params);
-	else deactivate(instances[instance].params);
+	printf("activate %d instance %lu\n", active, instance.num);
+	if(active) activate(instance.params);
+	else deactivate(instance.params);
 
-	std::string json = std::string("{\"result\": ") + (active ? "true" : "false") + ", \"instance\": " + std::to_string(instance) + "}";
+	std::string json = std::string("{\"result\": ") + (active ? "true" : "false") + ", \"instance\": " + std::to_string(instance.num) + "}";
 	respond(json);
 }
 
@@ -154,6 +160,18 @@ void NodeBase::respond(std::string& message)
 	tcp.sendMessage(message + '\n');
 }
 
+NodeBase::Instance& NodeBase::findInstance(size_t num)
+{
+	for(auto& i : instances)
+	{
+		if(i.num == num)
+			return i;
+	}
+
+	printf("WARNING: Instance %lu not found\n", num);
+	return instances.front();
+}
+
 void NodeBase::run()
 {
 	sleep_ms(3000);
@@ -179,7 +197,7 @@ void NodeBase::run()
 	setParamFormat(paramFormat);
 	defaultReady = paramFormat.count() == 0;
 
-	instances.push_back(Instance(defaultReady));
+	//instances.push_back(Instance(defaultReady));
 	respondFormat();
 
 	while(true)

@@ -1,5 +1,9 @@
 const ws = new WebSocket("ws://localhost:3001");
 
+ws.addEventListener("open", () => {
+	requestLayout()
+})
+
 ws.addEventListener('message', (event) => {
 	const msg = JSON.parse(event.data.toString())
 	console.log(msg)
@@ -10,8 +14,12 @@ ws.addEventListener('message', (event) => {
 	//if(msg.cmd === "instance")
 	//	showInstance(msg.arg[0], msg.result);
 
-	if(msg.cmd == "nodeadd")
-	{
+	if(msg.cmd == "getlayout") {
+		setLayout(msg.result[0])
+		setValues(msg.result[1])
+	}
+
+	else if(msg.cmd == "nodeadd") {
 		console.log("node type", msg.type)
 		console.log("node name", msg.name)
 		console.log("is sensor", msg.sensor)
@@ -20,12 +28,10 @@ ws.addEventListener('message', (event) => {
 		addNodeFormat(msg.type, msg.format)
 	}
 
-	else if(msg.cmd === "dependency")
-	{
+	else if(msg.cmd === "dependency") {
 	}
 
-	else if(msg.cmd === "passed")
-	{
+	else if(msg.cmd === "passed") {
 		console.log(msg.arg)
 		highlightNodeByID(msg.arg[0], msg.arg[1], msg.arg[2] ? "green" : "red")
 	}
@@ -36,22 +42,20 @@ function sendMessage(json)
 	ws.send(JSON.stringify(json))
 }
 
-/*function addDependency(to, dep)
-{
-	let delim = dep.lastIndexOf(":");
-	let depID = dep.slice(0, delim);
-	let depInst = dep.slice(delim + 1);
-
-	delim = to.lastIndexOf(":");
-	let toID = to.slice(0, delim);
-	let toInst = to.slice(delim + 1);
-
+function requestLayout() {
 	sendMessage({
-		cmd: "dependency",
-		arg: [ toID, toInst, depID, depInst ]
+		cmd : "getlayout",
+		arg : []
 	})
 }
-*/
+
+function sendLayout(layoutJSON) {
+	console.log(layoutJSON)
+	sendMessage({
+		cmd : "layout",
+		arg : [ layoutJSON ]
+	})
+}
 
 function setParameters(node, params) {
 	sendMessage({
@@ -62,14 +66,14 @@ function setParameters(node, params) {
 
 function addDependency(to, node) {
 	sendMessage({
-		cmd: "dependency",
+		cmd: "depend",
 		arg: [ to.name, to.data.instance, node.name, node.data.instance, true ]
 	})
 }
 
 function removeDependency(to, node) {
 	sendMessage({
-		cmd: "dependency",
+		cmd: "undepend",
 		arg: [ to.name, to.data.instance, node.name, node.data.instance, false ]
 	})
 }
@@ -77,6 +81,6 @@ function removeDependency(to, node) {
 function addInstance(node) {
 	sendMessage({
 		cmd: "instance",
-		arg: [ node.name ]
+		arg: [ node.name, node.data.instance ]
 	})
 }

@@ -23,7 +23,8 @@ class node_base:
 
         # If the node takes no parameters, it's ready by default
         self.defaultReady = len(self.get_params_format()) == 0
-        self.instances = [ { "ready" : self.defaultReady, "params" : {}, "lastResult": None } ]
+        #self.instances = [ { "ready" : self.defaultReady, "params" : {}, "lastResult": None } ]
+        self.instances = []
 
         self.control_reset_on_deactivate(True)
         self.__disable_control(0)
@@ -65,26 +66,28 @@ class node_base:
 
             # Loop through each instance
             for i in range(len(self.instances)):
+                instance = self.instances[i]
+
                 # If the instance is ready for checking, call check()
-                if(self.instances[i]["ready"]):
+                if(instance["ready"]):
 
                     # If a control node instance hasn't been activated, don't perform check
-                    if(self.context == "control" and not self.instances[i]["activated"]):
+                    if(self.context == "control" and not instance["activated"]):
                         continue
 
-                    self.current_instance = i
-                    result = self.check(self.instances[i]["params"])
+                    self.current_instance = instance["num"]
+                    result = self.check(instance["params"])
 
                     # Only send messages if the value differs to minimize traffic
-                    if(result != self.instances[i]["lastResult"]):
+                    if(result != instance["lastResult"]):
                         message = {
                             "result" : result,
-                            "instance" : i
+                            "instance" : instance["num"]
                         }
 
                         self.__respond(message)
 
-                    self.instances[i]["lastResult"] = result
+                    instance["lastResult"] = result
                     should_sleep = True
 
             # Sleep for the user specified amount
@@ -94,25 +97,25 @@ class node_base:
     def __handle_activate(self, instance, value):
         print(value, " Passed to __handle_activate")
 
-        if(not "activated" in self.instances[instance]):
-            self.instances[instance]["activated"] = False
+        if(not "activated" in instance):
+            instance["activated"] = False
 
         # If the action node is already in the given state, do nothing.
         # Control nodes can accept the previous state
-        if(self.context == "action" and self.instances[instance]["activated"] == value):
+        if(self.context == "action" and instance["activated"] == value):
             return
 
         # Are the parameters set?
-        if(not self.instances[instance]["ready"]):
+        if(not instance["ready"]):
             # TODO return a status indicating error
             return
 
         # Update the state
-        self.instances[instance]["activated"] = value
+        instance["activated"] = value
 
         # Activate or deactivate
         if(value):
-            self.activate(self.instances[instance]["params"])
+            self.activate(instance["params"])
 
         else:
             if(self.context == "control"):
@@ -122,12 +125,12 @@ class node_base:
                 if(self.reset_control):
                     self.__disable_control(instance)
 
-            else: self.deactivate(self.instances[instance]["params"])
+            else: self.deactivate(instance["params"])
 
         if(self.context == "action"):
             message = {
                 "result" : value,
-                "instance" : instance
+                "instance" : instance["num"]
             }
 
             self.__respond(message)
@@ -156,33 +159,40 @@ class node_base:
     def __handle_single_messages(self, buffer):
         p = buffer.decode("utf-8").split("\n")
         for msg in p:
-            self.__handle_message(msg)
+            if(len(msg) > 0):
+                self.__handle_message(msg)
 
     def __handle_message(self, message):
-        p = message.split()
+        p = message.split("\r")
         if(len(p) == 0):
             return
 
         print(p)
 
-        # If the instance number is more than there are instances, add instances
-        instance = int(p[0])
-        for i in range(len(self.instances), instance + 1):
-            self.instances.append({ "ready" : self.defaultReady, "params" : {}, "lastResult": None })
-            self.__disable_control(len(self.instances) - 1)
+        instance_number = int(p[0])
 
-        # Delete the ID from the incoming parameters
+        # Delete the instance number from the incoming parameters
         del p[0]
-
-        params_format = self.__patched_format()
-        result = { "valid" : True, "reason" : "", "instance" : instance }
 
         # Ignore empty messages
         if(len(p) == 0):
             return
 
+        if(p[0] == "instance"):
+            self.instances.append({"ready" : self.defaultReady, "params" : {}, "lastResult" : None, "num" : instance_number })
+            instance = self.instances[-1]
+            self.__disable_control(instance)
+            print("Added instance", instance["num"])
+            return
+
+        params_format = self.__patched_format()
+        result = { "valid" : True, "reason" : "", "instance" : instance_number }
+
+        instance = self.find_instance(instance_number)
+        print(instance)
+
         # Is the first parameter "activate" and is this node a sensor
-        elif(p[0] == "activate" and self.context != "sensor"):
+        if(p[0] == "activate" and self.context != "sensor"):
             return self.__handle_activate(instance, True)
 
         elif(p[0] == "deactivate" and self.context != "sensor"):
@@ -213,27 +223,34 @@ class node_base:
                         result["valid"] = False
                         break
 
-                self.instances[instance]["params"][params_keys[i]] = p[i]
+                instance["params"][params_keys[i]] = p[i]
 
             # If there's no error so far, validate the parameters
             if(result["valid"]):
-                res = self.validate_params(self.instances[instance]["params"])
-                self.instances[instance]["ready"] = True
+                res = self.validate_params(instance["params"])
+                instance["ready"] = True
                 if(res): result.update(res)
 
             # If the parameter validation failed, clear the parameters
             if(not result["valid"]):
-                self.instances[instance]["params"] = {}
-                self.instances[instance]["ready"] = False
-                self.instances[instance]["lastResult"] = None
+                instance["params"] = {}
+                instance["ready"] = False
+                instance["lastResult"] = None
 
         self.__respond(result)
 
     def __disable_control(self, instance):
         # If a control node is to be disabled, disable it and re-setup it
         if(self.context == "control"):
-            self.instances[instance]["activated"] = False
-            self.control_setup(self.instances[instance]["params"])
+            instance["activated"] = False
+            self.control_setup(instance["params"])
+
+    def find_instance(self, instance_number):
+        for i in self.instances:
+            if(i["num"] == instance_number):
+                return i
+
+        return None
 
     def control_finish(self):
         self.__disable_control(self.current_instance)

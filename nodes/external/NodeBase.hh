@@ -35,13 +35,10 @@ public:
 
 	void run();
 
-	void handleMessage(const std::string& message);
-	void handleActivate(size_t instance, bool active);
-
 private:
 	struct Instance
 	{
-		Instance(bool ready) : ready(ready)
+		Instance(bool ready, size_t num) : ready(ready), num(num)
 		{
 		}
 
@@ -50,7 +47,14 @@ private:
 
 		int lastResult = -1;
 		bool activated = false;
+
+		size_t num;
 	};
+
+	void handleMessage(const std::string& message);
+	void handleActivate(Instance& instance, bool active);
+
+	Instance& findInstance(size_t num);
 
 	void respondFormat();
 	void respond(std::string& message);
