@@ -102,6 +102,26 @@ ws.on("connection", (c) => {
 		const msg = JSON.parse(payload.toString())
 		console.log(msg)
 
+		if(msg.cmd == "instancespassed") {
+			/*	FIXME
+			 *	All of this probably could be sent in a single message.
+			 *	It's easy to send a bunch of "passed" messages because the
+			 *	frontend already has a handler for it but it's very inefficient */
+
+			//	Send the "passed" state of each instance
+			activeNodes.forEach((n) => {
+				n.instances.forEach((i) => {
+					c.send(JSON.stringify({
+						cmd: "passed",
+						arg: [ i.parent.ID, i.num, i.passed ]
+					}))
+				})
+			})
+
+			//	There is no "instancespassed" message returns
+			return
+		}
+
 		if(msg.cmd === "getlayout") {
 			msg.result = [
 				layout,

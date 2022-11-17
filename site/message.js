@@ -47,6 +47,11 @@ function requestLayout() {
 		cmd : "getlayout",
 		arg : []
 	})
+
+	sendMessage({
+		cmd: "instancespassed",
+		arg: []
+	})
 }
 
 function sendLayout(layoutJSON) {
