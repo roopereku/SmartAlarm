@@ -233,7 +233,7 @@ void NodeBase::run()
 
 				if(result != instances[i].lastResult)
 				{
-					std::string json = std::string("{\"result\": ") + (result ? "true" : "false") + ", \"instance\": " + std::to_string(i) + "}";
+					std::string json = std::string("{\"result\": ") + (result ? "true" : "false") + ", \"instance\": " + std::to_string(instances[i].num) + "}";
 					respond(json);
 				}
 
