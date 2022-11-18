@@ -102,6 +102,26 @@ ws.on("connection", (c) => {
 		const msg = JSON.parse(payload.toString())
 		console.log(msg)
 
+		if(msg.cmd == "instancespassed") {
+			/*	FIXME
+			 *	All of this probably could be sent in a single message.
+			 *	It's easy to send a bunch of "passed" messages because the
+			 *	frontend already has a handler for it but it's very inefficient */
+
+			//	Send the "passed" state of each instance
+			activeNodes.forEach((n) => {
+				n.instances.forEach((i) => {
+					c.send(JSON.stringify({
+						cmd: "passed",
+						arg: [ i.parent.ID, i.num, i.passed ]
+					}))
+				})
+			})
+
+			//	There is no "instancespassed" message returns
+			return
+		}
+
 		if(msg.cmd === "getlayout") {
 			msg.result = [
 				layout,
@@ -126,6 +146,46 @@ ws.on("connection", (c) => {
 
 				nodeValues[ID][msg.arg[1]] = ""
 				console.log(nodeValues)
+			}
+		}
+
+		else if(msg.cmd === "removeinstance") {
+			let node = undefined
+			let instance = undefined
+
+			console.log(layout)
+
+			/*	Because drawflow actually removes a node before it tells the user about it,
+			 *	we need to fetch information about the instance from an old version of the layout */
+			checkLoop:
+			for (const [modName, module] of Object.entries(layout.drawflow)) {
+				for (const [key, value] of Object.entries(module.data)) {
+					if(key === msg.arg[0].toString()) {
+						console.log("Found")
+						node = activeNodes.find((n) => value.name === n.ID)
+						instance = findInstance(node, value.data.instance)
+						break checkLoop
+					}
+				}
+			}
+
+			if(instance === undefined) {
+				console.log("Instance is undefined when removing")
+			}
+
+			else {
+				const index = node.instances.indexOf(instance)
+
+				if(index > -1) {
+					console.log("Removed instance", node.ID, instance.num)
+					sendToNode(node, instance.num + "\r" + "removeinstance")
+
+					delete nodeValues[node.ID][instance.num]
+					console.log(nodeValues[node.ID], instance.num)
+					node.instances.splice(index, 1)
+				}
+
+				else console.log("Index -1")
 			}
 		}
 
