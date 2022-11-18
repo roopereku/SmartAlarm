@@ -15,15 +15,17 @@ except ModuleNotFoundError:
 try: import serial
 
 except ModuleNotFoundError:
-    os.system('python -m pip install serial')
+    os.system('python -m pip install pyserial')
     import serial
 
-try: import easygui
+#try: import easygui
+#
+#except ModuleNotFoundError:
+#    os.system('python -m pip install easygui')
+#    import easygui
 
-except ModuleNotFoundError:
-    os.system('python -m pip install easygui')
-    import easygui
-
+device_id = None
+last_read = None
 device = None
 
 async def echo(websocket):
@@ -45,14 +47,24 @@ async def echo(websocket):
             await websocket.send(config)
 
         elif(cmd[0] == "write"):
+            message = cmd[1][:-1].split("\r")
+            print(message)
+
             # FIXME Remove quotation marks from the payload because python doesn't like them
-            payload = ("\b" + cmd[1].rstrip() + "\b").encode("utf-8")
+            payload = ("\b" + cmd[1][:-1] + "\b").encode("utf-8")
             print("write", payload)
             device.write(payload)
 
-async def start_server(device_id):
+            await websocket.close()
+
+        elif(cmd[0] == "cancel"):
+            await websocket.close()
+
+async def start_server():
     global device
     device = serial.Serial(device_id, 9600)    #Open port with baud rate
+
+    print("Start. Dev id", device_id)
 
     async with websockets.serve(echo, "0.0.0.0", 8765):
         await asyncio.Future()  # run forever
@@ -65,15 +77,15 @@ def read_serial():
     return received_data
 
 if platform == "linux" or platform == "linux2":
-    easygui.msgbox("Linucks :-)", title="Platform")
+    #easygui.msgbox("Linucks :-)", title="Platform")
     device_id = "/dev/ttyACM0"
 
 elif platform == "darwin":
-    easygui.msgbox("MACS NOT SUPPORTED >:)", title="Platform")
+    #easygui.msgbox("MACS NOT SUPPORTED >:)", title="Platform")
     sys.exit(1)
 
 elif platform == "win32":
-    easygui.msgbox("windoze", title="Platform")
+    #easygui.msgbox("windoze", title="Platform")
     device_id = "COM0"
 
-asyncio.run(start_server(device_id))
+asyncio.run(start_server())
