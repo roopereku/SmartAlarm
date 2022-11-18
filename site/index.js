@@ -330,36 +330,3 @@ function changeMode(option) {
   }
 
 }
-
-function openConfigWindow() {
-	readConfig((config) => {
-		let configDiv = document.getElementById("configInputs")
-		configDiv.innerHTML = ""
-
-		for (let i = 0; i < config.length; i += 2) {
-			configDiv.innerHTML += '<p>' + config[i] + '</p>' +
-				'<input type=text class=configInput placeholder="' + config[i + 1] + '">'
-		}
-	})
-
-	Swal.fire({
-		title: 'Config',
-		html: '<div id=configInputs><p>Waiting for config...</p></div>'
-	}).then((result) => {
-		if (result.isConfirmed) {
-			let configDiv = document.getElementById("configInputs")
-			let inputs = configDiv.querySelectorAll(".configInput")
-
-			let message = ""
-			for (let i = 0; i < inputs.length; i++) {
-				let key = inputs[i].previousSibling.innerHTML
-				let value = inputs[i].value
-
-				message += key + "\r" + value + "\r"
-			}
-
-			console.log(message)
-			sendConfig(message)
-		}
-	})
-}

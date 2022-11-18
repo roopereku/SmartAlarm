@@ -1,50 +1,73 @@
-let ws2url = "ws://192.168.91.223:8765"
-let ws2 = new WebSocket(ws2url)
-let readCallback, connectCallback
+const serverURL = "ws://localhost:8765"
 
-function connectToWS(callback) {
-    connectCallback = callback
-    if (!ws2) {
-        console.log("Trying to connect to ws")
-        ws2 = new WebSocket(ws2url)
-    } else if (ws2.readyState === WebSocket.OPEN) {
-        connectCallback()
-    } else {
-        let interval = setInterval(() => {
-            if (ws2.readyState === WebSocket.OPEN){
-                clearInterval(interval)
-            } else {
-                console.log("Trying to connect to ws")
-                ws2 = new WebSocket(ws2url)
-            }
-        }, 3000);
-    }
+function openConfigWindow() {
+	connectConfigServer().then((configSocket) => {
+		console.log("Called then")
+        configSocket.send("read")
+
+		configSocket.addEventListener('message', (data) => {
+			console.log(data)
+			let config = data.data.split("\r")
+
+			let configDiv = document.getElementById("configInputs")
+			configDiv.innerHTML = ""
+
+			for (let i = 0; i < config.length; i += 2) {
+				configDiv.innerHTML += '<p>' + config[i] + '</p>' +
+					'<input type=text class=configInput placeholder="' + config[i + 1] + '">'
+			}
+		})
+
+		Swal.fire({
+			title: 'Config',
+			html: '<div id=configInputs><p>Python script has not started...</p></div>',
+			showCancelButton: true,
+
+		}).then((result) => {
+			if(result.isConfirmed) {
+				let configDiv = document.getElementById("configInputs")
+				let inputs = configDiv.querySelectorAll(".configInput")
+
+				let message = ""
+				for (let i = 0; i < inputs.length; i++) {
+					let key = inputs[i].previousSibling.innerHTML
+					let value = inputs[i].value || inputs[i].placeholder
+
+					console.log(key, value)
+					message += key + "\r" + value + "\r"
+				}
+
+				console.log(message)
+				configSocket.send("write\n" + message)
+			}
+
+			else configSocket.send("cancel")
+		})
+	
+	}).catch(() => {
+		Swal.fire(
+		  'Unable to connect!',
+		  'Make sure that the python configuration server is running',
+		  'error'
+		)
+	})
 }
 
-function sendConfig(message) {
-    ws2.send("write\n" + message)
+function connectConfigServer() {
+	const promise = new Promise((resolve, reject) => {
+		console.log("Trying to connect to config server")
+		const configSocket = new WebSocket(serverURL)
+
+		configSocket.addEventListener("open", () => {
+			console.log("connection opened")
+			resolve(configSocket)
+		})
+
+		configSocket.addEventListener("close", () => {
+			console.log("connection closed")
+			reject()
+		})
+	})
+
+	return promise
 }
-
-function readConfig(callback) {
-    readCallback = callback
-    connectToWS(() => {
-        ws2.send("read")
-    })
-}
-
-ws2.addEventListener("close", () => {
-    console.log("connection closed")
-})
-
-ws2.addEventListener("open", () => {
-    console.log("connection opened")
-    if (connectCallback) {
-        connectCallback()
-    }
-})
-
-ws2.addEventListener('message', (data) => {
-    console.log(data)
-    let config = data.data.split("\r")
-    readCallback(config)
-})
