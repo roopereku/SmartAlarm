@@ -1,6 +1,6 @@
 /*
- * TODO: Make class and inherit BaseNode
- * TODO: Modify to sleep until i2c is receiving data
+ * TODO: Sleeping, interrupts?
+ * TODO: Add comparision parameters
  */
 
 #include <cstdio>
