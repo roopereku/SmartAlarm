@@ -48,6 +48,7 @@ target_link_libraries(${PROJECT_NAME}
 	pico_cyw43_arch_lwip_poll
 	hardware_adc
 	hardware_i2c
+	hardware_flash
 )
 
 # Enable usb output, disable uart output

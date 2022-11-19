@@ -3,9 +3,10 @@
 
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
-
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
+
+#include "Config.hh"
 
 #include <functional>
 #include <string>
@@ -16,7 +17,7 @@ public:
 	TCPClient();
 
 	void update();
-	bool connect();
+	bool connect(Config& cfg);
 
 	void sendMessage(const std::string& message);
 	std::function <void(const std::string&)> onMessage;

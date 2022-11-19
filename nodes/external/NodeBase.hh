@@ -5,6 +5,7 @@
 #include "ParameterList.hh"
 #include "TCPClient.hh"
 #include "Status.hh"
+#include "Config.hh"
 #include "Util.hh"
 
 #include "pico/stdlib.h"
@@ -24,7 +25,7 @@ enum class NodeContext
 class NodeBase
 {
 public:
-	NodeBase(const char* nodeType, const char* name, NodeContext context, unsigned delay = 1000);
+	NodeBase(const char* nodeType, const char* _, NodeContext context, unsigned delay = 1000);
 
 	virtual bool check(Params& params) { return true; }
 	virtual void deactivate(Params& params) {}
@@ -59,6 +60,7 @@ private:
 	void respondFormat();
 	void respond(std::string& message);
 
+	Config cfg;
 	TCPClient tcp;
 
 	std::string type;

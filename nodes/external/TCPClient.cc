@@ -1,13 +1,5 @@
 #include "TCPClient.hh"
 
-//#define TEST_TCP_SERVER_IP "192.168.1.145"
-//#define WIFI_SSID "E-P:n kone ja tarvike"
-//#define WIFI_PASSWORD "M3YG3RD9LMBDA"
-
-#define TEST_TCP_SERVER_IP "192.168.91.223"
-#define WIFI_SSID "OnePlus Nord N10 5G"
-#define WIFI_PASSWORD "salsasana666"
-
 #define TCP_PORT 4242
 
 TCPClient::TCPClient() {}
@@ -21,9 +13,9 @@ void TCPClient::sendMessage(const std::string& message)
 		printf("Failed to write data %d\n", err);
 }
 
-bool TCPClient::connect()
+bool TCPClient::connect(Config& cfg)
 {
-	if(!isWifiConnected && cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000))
+	if(!isWifiConnected && cyw43_arch_wifi_connect_timeout_ms(cfg.get("ssid").c_str(), cfg.get("pass").c_str(), CYW43_AUTH_WPA2_AES_PSK, 30000))
 	{
 		printf("failed to connect.\n");
 		return false;
@@ -32,7 +24,7 @@ bool TCPClient::connect()
 	isWifiConnected = true;
 
 	ip_addr_t remote_addr;
-	ip4addr_aton(TEST_TCP_SERVER_IP, &remote_addr);
+	ip4addr_aton(cfg.get("ip").c_str(), &remote_addr);
 
 	printf("Connecting to %s port %u\n", ip4addr_ntoa(&remote_addr), TCP_PORT);
 	pcb = tcp_new_ip_type(IP_GET_TYPE(&state->remote_addr));

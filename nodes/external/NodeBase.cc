@@ -2,10 +2,19 @@
 
 #include <cctype>
 
-NodeBase::NodeBase(const char* nodeType, const char* name, NodeContext context, unsigned delay)
-	: type(nodeType), name(name), ID(std::string(nodeType) + ":" + name), context(context), delay(delay)
+NodeBase::NodeBase(const char* nodeType, const char* _, NodeContext context, unsigned delay)
+	: type(nodeType), name(cfg.get("name").c_str()), ID(std::string(nodeType) + ":" + name), context(context), delay(delay)
 {
     stdio_init_all();
+
+	gpio_init(16);
+	gpio_set_dir(16, GPIO_IN);
+
+	//bool usb = stdio_usb_connected();
+	bool high16 = gpio_get(16);
+
+	if(high16)
+		cfg.startReading();
 
     if(cyw43_arch_init())
         printf("failed to initialise\n");
@@ -192,8 +201,13 @@ void NodeBase::run()
 
 	cyw43_arch_enable_sta_mode();
 
+	printf("ssid: %s\n", cfg.get("ssid").c_str());
+	printf("ssidpass: %s\n", cfg.get("pass").c_str());
+	printf("ip: %s\n", cfg.get("ip").c_str());
+	printf("name: %s\n", cfg.get("name").c_str());
+
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-	while(!tcp.connect());
+	while(!tcp.connect(cfg));
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
 
 	tcp.onMessage = [this](const std::string& message)
