@@ -2,7 +2,7 @@
 
 #include <cctype>
 
-NodeBase::NodeBase(const char* nodeType, const char* _, NodeContext context, unsigned delay)
+NodeBase::NodeBase(const char* nodeType, NodeContext context, unsigned delay)
 	: type(nodeType), name(cfg.get("name").c_str()), ID(std::string(nodeType) + ":" + name), context(context), delay(delay)
 {
     stdio_init_all();

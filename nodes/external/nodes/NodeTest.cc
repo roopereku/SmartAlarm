@@ -3,7 +3,7 @@
 class NodeTest : public NodeBase
 {
 public:
-	NodeTest(const char* name) : NodeBase("blink", name, NodeContext::Action, 0)
+	NodeTest() : NodeBase("blink", NodeContext::Action, 0)
 	{
 		for(int i = 2; i <= 4; i++)
 		{
@@ -41,6 +41,6 @@ public:
 
 int main()
 {
-	NodeTest node("1");
+	NodeTest node;
 	node.run();
 }

@@ -7,7 +7,7 @@
 class NodeLight : public NodeBase
 {
 public:
-	NodeLight(const char* name) : NodeBase("light", name, NodeContext::Sensor, 100)
+	NodeLight() : NodeBase("light", NodeContext::Sensor, 100)
 	{
 		adc_init();
 		adc_gpio_init(28);
@@ -44,6 +44,6 @@ public:
 
 int main()
 {
-	NodeLight node("light1");
+	NodeLight node;
 	node.run();
 }

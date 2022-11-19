@@ -25,7 +25,7 @@ enum class NodeContext
 class NodeBase
 {
 public:
-	NodeBase(const char* nodeType, const char* _, NodeContext context, unsigned delay = 1000);
+	NodeBase(const char* nodeType, NodeContext context, unsigned delay = 1000);
 
 	virtual bool check(Params& params) { return true; }
 	virtual void deactivate(Params& params) {}

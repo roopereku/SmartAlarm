@@ -3,7 +3,7 @@
 class NodeGPIO : public NodeBase
 {
 public:
-	NodeGPIO(const char* name) : NodeBase("gpio", name, NodeContext::Action, 0)
+	NodeGPIO() : NodeBase("gpio", NodeContext::Action, 0)
 	{
 		for(int i = 2; i <= 16; i++)
 		{
@@ -55,6 +55,6 @@ public:
 
 int main()
 {
-	NodeGPIO node("gpio1");
+	NodeGPIO node;
 	node.run();
 }

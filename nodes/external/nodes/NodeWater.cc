@@ -11,7 +11,7 @@
 
 class NodeWater : public NodeBase {
 public:
-    NodeWater(const char *name) : NodeBase("water", name, NodeContext::Sensor, 100) {
+    NodeWater() : NodeBase("water", NodeContext::Sensor, 100) {
         // This example will use I2C0 on the default SDA and SCL pins (GP4, GP5 on a Pico)
         i2c_init(i2c_default, 100 * 1000);
         gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
@@ -53,7 +53,7 @@ public:
 };
 
 int main() {
-    NodeWater node("water1");
+    NodeWater node;
     node.run();
 }
 
