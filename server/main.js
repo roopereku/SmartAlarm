@@ -190,7 +190,7 @@ ws.on("connection", (c) => {
 		}
 
 		else if(msg.cmd === "depend") {
-			addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+			msg.result = addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
 		}
 
 		else if(msg.cmd == "undepend") {
@@ -303,15 +303,31 @@ function createInstance(node, num) {
 	return entry.num
 }
 
+function findInDependencies(from, node) {
+	//	Make sure that the given node is not found in the dependency tree
+	for(let i = 0; i < from.dependencies.length; i++) {
+		if(findInDependencies(from.dependencies[i], node))
+			return true
+	}
+
+	//	If we encounter the node that we want to find, return true
+	return from === node
+}
+
 function addDependency(toID, toInstance, nodeID, nodeInstance) {
 	to = activeNodes.find((n) => toID === n.ID)
 	dep = activeNodes.find((n) => nodeID === n.ID)
+
+	//	Prevent circular dependencies
+	if(findInDependencies(findInstance(dep, nodeInstance), findInstance(to, toInstance)))
+		return false
 
 	findInstance(to, toInstance).dependencies.push(findInstance(dep, nodeInstance))
 	console.log(to.ID, " instance ", toInstance, " now depends on ", dep.ID, " instance ", nodeInstance)
 
 	//	Immediately notify about possible state changes
 	trigger(findInstance(dep, nodeInstance))
+	return true
 }
 
 function removeDependency(fromID, fromInstance, nodeID, nodeInstance) {

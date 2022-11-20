@@ -11,9 +11,6 @@ ws.addEventListener('message', (event) => {
 	if(msg.error)
 		return;
 
-	//if(msg.cmd === "instance")
-	//	showInstance(msg.arg[0], msg.result);
-
 	if(msg.cmd == "getlayout") {
 		setLayout(msg.result[0])
 		setValues(msg.result[1])
@@ -28,7 +25,9 @@ ws.addEventListener('message', (event) => {
 		addNodeFormat(msg.type, msg.format)
 	}
 
-	else if(msg.cmd === "dependency") {
+	else if(msg.cmd === "depend") {
+		if(msg.result === false)
+			cutDependency(msg.arg[1], msg.arg[3])
 	}
 
 	else if(msg.cmd === "passed") {

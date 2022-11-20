@@ -15,6 +15,16 @@ function setLayout(layoutJSON) {
 	editor.import(layoutJSON);
 }
 
+function cutDependency(inputID, outputID)
+{
+	editor.removeSingleConnection(outputID, inputID, "output_1", "input_1")
+	Swal.fire(
+	  'Cannot do that',
+	  'Circular dependencies are not allowed',
+	  'error'
+	)
+}
+
 function setValues(valuesJSON) {
 	for(const [key, value] of Object.entries(valuesJSON)) {
 		//	Find the ID's of the instances of the given node
@@ -297,7 +307,6 @@ console.log(transform);
 //e.target.children[0].style.top  =  -editor.canvas_y - editor.container.offsetTop +'px';
 //e.target.children[0].style.left  =  -editor.canvas_x  - editor.container.offsetLeft +'px';
 editor.editor_mode = "fixed";
-
 }
 
 function closemodal(e) {
