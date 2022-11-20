@@ -43,6 +43,10 @@ const server = net.createServer((client) => {
 
 				activeNodes.push(node);
 				nodeValues[node.ID] = {}
+
+				ws.clients.forEach((client) => {
+					informAboutNode(node, client)
+				})
 			}
 
 			//	Is result present
@@ -269,7 +273,7 @@ function dependenciesPassed(instance) {
 
 function hasPassed(instance) {
 	let passed = dependenciesPassed(instance)
-	let thisPassed = instance.parent.context == "action" ? true : instance.passed
+	let thisPassed = instance.passed
 	let dependecyPassed = instance.dependencies.length == 0 ? true : passed > 0
 
 	console.log("(", instance.parent.ID, " instance ", instance.num, ") Passed", passed, "/", instance.dependencies.length, " thisPassed ", thisPassed)
@@ -334,15 +338,27 @@ function removeDependency(fromID, fromInstance, nodeID, nodeInstance) {
 	from = activeNodes.find((n) => fromID === n.ID)
 	dep = activeNodes.find((n) => nodeID === n.ID)
 
-	const index = findInstance(from, fromInstance).dependencies.indexOf(findInstance(dep, nodeInstance))
+	fromInst = findInstance(from, fromInstance)
+	depInst = findInstance(dep, nodeInstance)
+
+	const index = fromInst.dependencies.indexOf(depInst)
 
 	if (index > -1) {
-		findInstance(from, fromInstance).dependencies.splice(index, 1)
+		fromInst.dependencies.splice(index, 1)
 		console.log(from.ID, " instance ", fromInstance, " no longer depends on ", dep.ID, " instance ", nodeInstance)
 
+		/*	This is a little hacky, but because handle_activate can only
+		 *	be called in the "forDependantInstances" callback in trigger,
+		 *	once we delete a dependency here and the dependant instance is
+		 *	something else than a sensor node, it's status will not change.
+		 *	To fix that let's forcefully say that it didn't pass and call handleActivate */
+		if(from.context !== "sensor") {
+			fromInst.passed = false
+			handleActivate(fromInst)
+		}
+
 		//	Immediately notify about possible state changes
-		trigger(findInstance(dep, nodeInstance))
-		trigger(findInstance(from, fromInstance))
+		trigger(fromInst)
 
 		return
 	}
