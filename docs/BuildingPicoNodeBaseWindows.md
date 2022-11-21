@@ -18,7 +18,7 @@ Setup tools to build and flash Raspberry Pi Pico W with CLion IDE. This guide pa
 ## Setup SmartAlarm repository, Building and Flashing
 
 ### Setup SmartAlarm repository
-Clone SmartAlarm and open terminal tab in CLion. If you clone with CLion it will do Setup SmartAlarm repository steps for you. It is still recommended to execute these steps to makse sure pico-sdk is ready to go.
+Clone SmartAlarm and open terminal tab in CLion. Do not use CLion's integrated git clone functionality. If you do it will clone unneccessary files and futher git pull/push will take forever. Instead clone the repository manually and execute the following step.
 - `cd nodes/external`
 - `git submodule update --init`
 - `cd pico-sdk`
