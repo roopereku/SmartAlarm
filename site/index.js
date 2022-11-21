@@ -8,6 +8,34 @@ editor.draggable_inputs = false;
 
 let nodeFormats = {}
 
+function showLoginWindow() {
+	function getCookie(name) {
+		const value = `; ${document.cookie}`;
+		const parts = value.split(`; ${name}=`);
+		if (parts.length === 2) return parts.pop().split(';').shift();
+	}
+
+	passcode = getCookie("passcode")
+
+	if(passcode === undefined) {
+		document.cookie = "passcode=; Path=/; SameSite=None; Secure"
+		passcode = ""
+	}
+
+	if(passcode.length > 0)
+		handleLogin(passcode)
+
+	else {
+		Swal.fire({
+			title: 'Enter the passcode',
+			input: 'password',
+		}).then((result) => {
+			handleLogin(result.value)
+			document.cookie = "passcode=" + result.value + "; Path=/; SameSite=None; Secure"
+		})
+	}
+}
+
 function setLayout(layoutJSON) {
     if(Object.keys(layoutJSON).length === 0)
 		return
