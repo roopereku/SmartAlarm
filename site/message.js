@@ -1,7 +1,7 @@
 const ws = new WebSocket("ws://localhost:3001");
 
 ws.addEventListener("open", () => {
-	requestLayout()
+	showLoginWindow()
 })
 
 ws.addEventListener('message', (event) => {
@@ -34,6 +34,13 @@ ws.addEventListener('message', (event) => {
 		console.log(msg.arg)
 		highlightNodeByID(msg.arg[0], msg.arg[1], msg.arg[2] ? "green" : "red")
 	}
+
+	else if(msg.cmd == "login") {
+		if(msg.result === false) {
+			document.cookie = "passcode=; Path=/; SameSite=None; Secure"
+			showLoginWindow()
+		}
+	}
 });
 
 function sendMessage(json)
@@ -41,15 +48,10 @@ function sendMessage(json)
 	ws.send(JSON.stringify(json))
 }
 
-function requestLayout() {
+function handleLogin(passcode) {
 	sendMessage({
-		cmd : "getlayout",
-		arg : []
-	})
-
-	sendMessage({
-		cmd: "instancespassed",
-		arg: []
+		cmd : "login",
+		arg : [ passcode ]
 	})
 }
 

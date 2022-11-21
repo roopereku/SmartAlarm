@@ -12,6 +12,8 @@ app.use(express.static(__dirname + "/../site/"))
 let nodeValues = {}
 let layout = {}
 
+let loginPasscode = "admin"
+
 const server = net.createServer((client) => {
 	console.log("Connection from ", client.remoteAddress)
 
@@ -71,7 +73,9 @@ function sendToNode(node, message) {
 
 function sendToAll(json) {
 	ws.clients.forEach((client) => {
-		client.send(JSON.stringify(json));
+		if(client.authenticated) {
+			client.send(JSON.stringify(json));
+		}
 	})
 }
 
@@ -97,40 +101,58 @@ function findInstance(node, num) {
 	return undefined
 }
 
-ws.on("connection", (c) => {
+function sendLayout(c) {
+	c.send(JSON.stringify({
+		cmd : "getlayout",
+		result: [ layout, nodeValues ]
+	}));
+
+	/*	FIXME
+	 *	All of this probably could be sent in a single message.
+	 *	It's easy to send a bunch of "passed" messages because the
+	 *	frontend already has a handler for it but it's very inefficient */
+
+	//	Send the "passed" state of each instance
 	activeNodes.forEach((n) => {
-		informAboutNode(n, c)
+		n.instances.forEach((i) => {
+			c.send(JSON.stringify({
+				cmd: "passed",
+				arg: [ i.parent.ID, i.num, i.passed ]
+			}))
+		})
 	})
+}
+
+ws.on("connection", (c) => {
+	c.authenticated = false
 
 	c.on("message", (payload) => {
 		const msg = JSON.parse(payload.toString())
 		console.log(msg)
 
-		if(msg.cmd == "instancespassed") {
-			/*	FIXME
-			 *	All of this probably could be sent in a single message.
-			 *	It's easy to send a bunch of "passed" messages because the
-			 *	frontend already has a handler for it but it's very inefficient */
-
-			//	Send the "passed" state of each instance
-			activeNodes.forEach((n) => {
-				n.instances.forEach((i) => {
-					c.send(JSON.stringify({
-						cmd: "passed",
-						arg: [ i.parent.ID, i.num, i.passed ]
-					}))
+		if(!c.authenticated && msg.cmd == "login") {
+			c.authenticated = msg.arg[0] === loginPasscode
+			msg.result = c.authenticated
+			c.send(JSON.stringify(msg))
+			
+			//	Has the user logged in succesfully
+			if(msg.result) {
+				//	Inform about connected nodes
+				activeNodes.forEach((n) => {
+					informAboutNode(n, c)
 				})
-			})
 
-			//	There is no "instancespassed" message returns
+				//	Inform about the layout
+				sendLayout(c)
+			}
+
 			return
 		}
 
-		if(msg.cmd === "getlayout") {
-			msg.result = [
-				layout,
-				nodeValues
-			]
+		else if(!c.authenticated)
+		{
+			console.log("Not logged in")
+			return
 		}
 
 		if(msg.cmd === "layout") {
