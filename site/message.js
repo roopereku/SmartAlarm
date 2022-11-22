@@ -19,9 +19,9 @@ ws.addEventListener('message', (event) => {
 	else if(msg.cmd == "nodeadd") {
 		console.log("node type", msg.type)
 		console.log("node name", msg.name)
-		console.log("is sensor", msg.sensor)
+		console.log("context", msg.context)
 
-		addNodeListing(msg.type, msg.name, msg.sensor)
+		addNodeListing(msg.type, msg.name, msg.context)
 		addNodeFormat(msg.type, msg.format)
 	}
 

@@ -2,7 +2,8 @@ const spawn = require("child_process").spawn
 const express = require('express')
 const http = require('http')
 const webSocket = require('ws')
-const net = require("net");
+const net = require("net")
+const crypto = require('crypto')
 
 const port = 3000
 const app = express()
@@ -12,7 +13,11 @@ app.use(express.static(__dirname + "/../site/"))
 let nodeValues = {}
 let layout = {}
 
-let loginPasscode = "admin"
+let loginPasscode = "11dc1d3da523b078578806b4cf6ee2baad0cd9f26d6da62c3fe87c2520be7b1f"
+console.log(encrypt("admin"))
+function encrypt(pass) {
+	return crypto.pbkdf2Sync(pass, 'salt', 1000, 512/16, 'sha512').toString('hex');
+}
 
 const server = net.createServer((client) => {
 	console.log("Connection from ", client.remoteAddress)
@@ -131,7 +136,7 @@ ws.on("connection", (c) => {
 		console.log(msg)
 
 		if(!c.authenticated && msg.cmd == "login") {
-			c.authenticated = msg.arg[0] === loginPasscode
+			c.authenticated = loginPasscode === msg.arg[0]
 			msg.result = c.authenticated
 			c.send(JSON.stringify(msg))
 			
