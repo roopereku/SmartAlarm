@@ -22,7 +22,7 @@ public:
 
     bool check(Params &params) override {
         auto &cmp = params["Water level"];
-        const uint16_t paramReal = atoi(params["Threshold"].c_str());
+        const uint16_t paramReal = atoi(params["Threshold [cm]"].c_str());
         uint32_t pads = 0;
         uint8_t trig_section = 0;
         float water_level;
@@ -57,11 +57,16 @@ public:
     }
 
     void setParamFormat(ParameterList &params) override {
-        params["Threshold"].type = "range";
+        params["Threshold [cm]"].type = "number";
 
         params["Water level"].strictHints = true;
         params["Water level"].addHint(">", "Above the threshold");
         params["Water level"].addHint("<", "Below the threshold");
+    }
+
+    Status validateParams(Params &params) override {
+        //	TODO report error when threshold is > 10 or < 0
+        return Status(true);
     }
 
 private:
