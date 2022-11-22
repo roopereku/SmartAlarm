@@ -5,12 +5,8 @@
 #include "NodeBase.hh"
 
 // TODO: Make this interrupt driven, maximize the sleeping time
+// TODO: Show numbers when sliding the threshold value
 
-/*
- * This class provides two operation modes:
- * 1. Detect if water is detected
- * 2. Measure the water level (0-10cm)
- */
 class NodeWater : public NodeBase {
 public:
     NodeWater() : NodeBase("water", NodeContext::Sensor, 100) {
@@ -29,7 +25,7 @@ public:
         const uint16_t paramReal = atoi(params["Threshold"].c_str());
         uint32_t pads = 0;
         uint8_t trig_section = 0;
-        int water_level;
+        float water_level;
 
         getHigh12Values();
         getLow8Values();
@@ -54,7 +50,9 @@ public:
         }
 
         water_level = trig_section * 5;
-        printf("Water level: %d cm", water_level / 10);
+        if (water_level > 0) {
+            printf("Water level: %.2f cm\n\n", (water_level / 10));
+        }
         return cmp == ">" ? water_level >= paramReal : water_level < paramReal;
     }
 
