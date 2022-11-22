@@ -8,6 +8,10 @@ editor.draggable_inputs = false;
 
 let nodeFormats = {}
 
+function encrypt(pass) {
+	return CryptoJS.PBKDF2(pass, 'salt', { keySize: 512/64, iterations: 1000, hasher:CryptoJS.algo.SHA512 }).toString(CryptoJS.enc.Hex);
+}
+
 function showLoginWindow() {
 	function getCookie(name) {
 		const value = `; ${document.cookie}`;
@@ -30,8 +34,8 @@ function showLoginWindow() {
 			title: 'Enter the passcode',
 			input: 'password',
 		}).then((result) => {
-			handleLogin(result.value)
-			document.cookie = "passcode=" + result.value + "; Path=/; SameSite=None; Secure"
+			handleLogin(encrypt(result.value))
+			document.cookie = "passcode=" + encrypt(result.value) + "; Path=/; SameSite=None; Secure"
 		})
 	}
 }
@@ -98,7 +102,7 @@ function updateParameters(e) {
 	}
 }
 
-function addNodeListing(type, name, isSensor) {
+function addNodeListing(type, name, context) {
 	let listings = document.getElementById("listings")
 	let entry = document.createElement("div")
 
@@ -106,6 +110,7 @@ function addNodeListing(type, name, isSensor) {
 	entry.draggable = true
 	entry.setAttribute("ondragstart", "drag(event)")
 	entry.setAttribute("data-node", type + ":" + name)
+	entry.setAttribute("context", context)
 
 	let icon = document.createElement("i")
 	icon.className="fas fa-lightbulb"
