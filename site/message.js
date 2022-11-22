@@ -20,8 +20,9 @@ ws.addEventListener('message', (event) => {
 		console.log("node type", msg.type)
 		console.log("node name", msg.name)
 		console.log("context", msg.context)
+		console.log("icon", msg.icon)
 
-		addNodeListing(msg.type, msg.name, msg.context)
+		addNodeListing(msg.type, msg.name, msg.context, msg.icon)
 		addNodeFormat(msg.type, msg.format)
 	}
 
