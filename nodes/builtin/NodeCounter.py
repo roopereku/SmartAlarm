@@ -20,6 +20,7 @@ class node_counter(node_base):
     def get_params_format(self):
         return {
             "passes" : {
+                "description" : "Enable after n passes",
                 "type" : "number"
             }
         }

@@ -55,6 +55,9 @@ public:
 		params["distance"].type = "number";
 		params["comparison"].strictHints = true;
 
+		params["distance"].description = "What distance to compare (cm)";
+		params["comparison"].description = "When to pass?";
+
 		params["comparison"].addHint(">", "Further than");
 		params["comparison"].addHint("<", "Closer than");
 		params["comparison"].addHint("=", "Equal");

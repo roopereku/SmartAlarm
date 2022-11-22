@@ -33,11 +33,13 @@ class node_time(node_base):
     def get_params_format(self):
         return {
             "time" : {
+                "description" : "Time to compare",
                 "type" : "time",
                 "default" : "12:00"
             },
 
             "comparison" : {
+                "description" : "How to compare",
                 "strict" : True,
                 "hint" : {
                     "equal" : "Equal",

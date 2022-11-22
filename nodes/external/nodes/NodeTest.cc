@@ -27,6 +27,7 @@ public:
 	void setParamFormat(ParameterList& params) override
 	{
 		params["which"].strictHints = true;
+		params["which"].description = "Which light to turn on";
 
 		params["which"].addHint("2", "Red");
 		params["which"].addHint("3", "Green");

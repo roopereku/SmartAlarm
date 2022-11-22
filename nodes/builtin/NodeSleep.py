@@ -24,6 +24,7 @@ class node_sleep(node_base):
     def get_params_format(self):
         return {
             "unit" : {
+                "description" : "Unit of the sleep duration",
                 "strict" : True,
                 "hint" : {
                     "1" : "Seconds",
@@ -33,6 +34,7 @@ class node_sleep(node_base):
             },
 
             "value" : {
+                "description" : "Sleep duration",
                 "type" : "number"
             }
         }

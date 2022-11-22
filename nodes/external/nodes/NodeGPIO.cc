@@ -27,6 +27,9 @@ public:
 		params["which"].strictHints = true;
 		params["state"].strictHints = true;
 
+		params["which"].description = "Which GPIO pin to set";
+		params["state"].description = "Should the GPIO pin be high or low?";
+
 		params["which"].addHint("2", "GP2");
 		params["which"].addHint("3", "GP3");
 		params["which"].addHint("4", "GP4");

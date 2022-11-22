@@ -35,10 +35,12 @@ class node_loop(node_base):
     def get_params_format(self):
         return {
             "iterations": {
+                "description" : "How many iterations",
                 "type" : "number"
             },
 
             "duration": {
+                "description" : "How long does an iteration last",
                 "type" : "number"
             },
         }

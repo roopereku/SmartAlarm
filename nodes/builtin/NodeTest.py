@@ -11,7 +11,7 @@ class node_test(node_base):
     def get_params_format(self):
         return {
             "value": {
-                "description" : "Set pas halfway point to enable",
+                "description" : "Set past halfway point to enable",
                 "type" : "range"
             }
         }
