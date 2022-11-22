@@ -11,8 +11,9 @@ class node_test(node_base):
     def get_params_format(self):
         return {
             "value": {
+                "description" : "Set pas halfway point to enable",
                 "type" : "range"
             }
         }
 
-node = node_test("test", 0.5, "sensor")
+node = node_test("test", 0.5, "sensor", "fa-solid fa-poo")
