@@ -22,7 +22,8 @@ public:
 
     bool check(Params &params) override {
         auto &cmp = params["Water level"];
-        const uint16_t paramReal = atoi(params["Threshold [cm]"].c_str());
+        const uint16_t multiplier = 10;
+        const uint16_t paramReal = atoi(params["Threshold [cm]"].c_str()) * multiplier; // Range 0-100
         uint32_t pads = 0;
         uint8_t trig_section = 0;
         float water_level;
