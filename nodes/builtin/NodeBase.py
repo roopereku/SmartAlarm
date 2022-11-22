@@ -8,7 +8,7 @@ server_ip = "localhost"
 server_port = 4242
 
 class node_base:
-    def __init__(self, node_type, delay, context):
+    def __init__(self, node_type, delay, context, icon_name = "fa-solid fa-question"):
         print("Node %s" % (node_type))
 
         if(len(sys.argv) == 1):
@@ -36,6 +36,7 @@ class node_base:
             "format": self.__patched_format(),
             "context": self.context,
             "id" : self.ID,
+            "icon" : icon_name,
             "name" : self.name,
             "type" : self.node_type
         })
@@ -130,7 +131,7 @@ class node_base:
 
     def __patched_format(self):
         format_preset = {
-            "default" : "",
+            "description" : "No description",
             "type" : "text",
             "strict" : False,
             "hint": {}
