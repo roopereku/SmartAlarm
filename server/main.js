@@ -42,11 +42,11 @@ const server = net.createServer((client) => {
 				node.builtin = false;
 				node.type = msg.type;
 				node.name = msg.name;
-				node.ID = msg.id
-
+				node.ID = msg.id;
+				node.icon = msg.icon;
 				node.context = msg.context;
 				node.paramFormat = msg.format;
-				node.connection = client
+				node.connection = client;
 
 				activeNodes.push(node);
 				nodeValues[node.ID] = {}
@@ -90,7 +90,8 @@ function informAboutNode(node, client) {
 		name : node.name,
 		type : node.type,
 		format : node.paramFormat,
-		context : node.context
+		context : node.context,
+		icon : node.icon
 	}
 
 	client.send(JSON.stringify(msg));

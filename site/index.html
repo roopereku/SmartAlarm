@@ -9,11 +9,11 @@
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script src="drawflow.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js" integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/js/all.min.js" crossorigin="anonymous"></script>
   <link rel="stylesheet" type="text/css" href="style.css" />
   <link rel="stylesheet" type="text/css" href="drawflow.css" />
   <link rel="stylesheet" type="text/css" href="beautiful.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ=" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" crossorigin="anonymous" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
   <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
@@ -24,6 +24,12 @@
   </header>
   <div class="wrapper">
     <div class="col" id="listings">
+      <select class="node-menu" onchange="showNodesWithContext(this.value)" size="1">
+        <option class="node-context" id="context-all" value="all">All nodes</option>
+        <option class="node-context" id="context-sensor" value="sensor">Sensor</option>
+        <option class="node-context" id="context-control" value="control">Control</option>
+        <option class="node-context" id="context-action" value="action">Action</option>
+      </select>
     </div>
     <div class="col-right">
       <div class="menu">
@@ -34,11 +40,7 @@
       </div>
       <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)">
 
-        <div class="btn-export" onclick="Swal.fire({ title: 'Export',
-          html: '<pre><code>'+JSON.stringify(editor.export(), null,4)+'</code></pre>'
-        })">Export</div>
-
-        <div class="btn-clear" onclick="editor.clearModuleSelected()">Clear</div>
+        <div class="btn-logout" onclick=logout()>Logout</div>
 
         <div class="btn-config" onclick=openConfigWindow()>Config</div>
 
