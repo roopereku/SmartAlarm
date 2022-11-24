@@ -19,17 +19,35 @@ function encrypt(pass) {
 	return crypto.pbkdf2Sync(pass, 'salt', 1000, 512/16, 'sha512').toString('hex');
 }
 
+function recoverNodeState(node) {
+	node.instances.forEach((i) => {
+		sendToNode(node, i.num + "\r" + "instance")
+
+		let instanceParams = nodeValues[node.ID][i.num]
+		sendToNode(node, i.num + "\r" + instanceParams)
+		handleActivate(i)
+	})
+}
+
 const server = net.createServer((client) => {
 	console.log("Connection from ", client.remoteAddress)
 
-    client.setKeepAlive(true, 3000);
+    client.setKeepAlive(true, 1000);
 
 	client.on("error", (e) => {
 		let node = activeNodes.find((n) => client === n.connection)
 
+		console.log(node.ID, "Died")
+		node.connection = undefined
+
+		node.instances.forEach((i) => {
+			i.passed = false
+			trigger(i)
+		})
+
 		sendToAll({
 			cmd : "dead",
-			arg : [ node.name ]
+			arg : [ node.ID, node.name ]
 		})
 	})
 
@@ -48,23 +66,40 @@ const server = net.createServer((client) => {
 			 *	sorts of relevant information so let's save it */
 			if(msg.id !== undefined)
 			{
-				let node = {};
-				node.instances = [];
-				node.builtin = false;
-				node.type = msg.type;
-				node.name = msg.name;
-				node.ID = msg.id;
-				node.icon = msg.icon;
-				node.context = msg.context;
-				node.paramFormat = msg.format;
-				node.connection = client;
+				let node = activeNodes.find((n) => msg.id === n.ID)
 
-				activeNodes.push(node);
-				nodeValues[node.ID] = {}
+				if(node === undefined) {
+					console.log("new node")
 
-				ws.clients.forEach((client) => {
-					informAboutNode(node, client)
-				})
+					node = {};
+					node.instances = [];
+					node.builtin = false;
+					node.type = msg.type;
+					node.name = msg.name;
+					node.ID = msg.id;
+					node.icon = msg.icon;
+					node.context = msg.context;
+					node.paramFormat = msg.format;
+					node.connection = client;
+
+					activeNodes.push(node);
+					nodeValues[node.ID] = {}
+
+					ws.clients.forEach((client) => {
+						informAboutNode(node, client)
+					})
+				}
+
+				else {
+					console.log(node.ID, "reconnected")
+					node.connection = client
+					recoverNodeState(node)
+
+					sendToAll({
+						cmd : "alive",
+						arg : [ node.ID, node.name ]
+					})
+				}
 			}
 
 			//	Is result present
