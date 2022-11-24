@@ -36,6 +36,14 @@ ws.addEventListener('message', (event) => {
 		highlightNodeByID(msg.arg[0], msg.arg[1], msg.arg[2] ? "green" : "red")
 	}
 
+	else if(msg.cmd == "dead") {
+		Swal.fire(
+		  'Connection dead',
+		  "Node " + msg.arg[0] + " has lost it's connection",
+		  'error'
+		)
+	}
+
 	else if(msg.cmd == "login") {
 		if(msg.result === false) {
 			document.cookie = "passcode=; Path=/; SameSite=None; Secure"

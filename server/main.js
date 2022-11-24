@@ -22,6 +22,17 @@ function encrypt(pass) {
 const server = net.createServer((client) => {
 	console.log("Connection from ", client.remoteAddress)
 
+    client.setKeepAlive(true, 3000);
+
+	client.on("error", (e) => {
+		let node = activeNodes.find((n) => client === n.connection)
+
+		sendToAll({
+			cmd : "dead",
+			arg : [ node.name ]
+		})
+	})
+
 	client.on("data", (data) => {
 		/*	When using plain TCP, it's possible that separate messages
 		 *	are found in the same packet. To prevent this split the data
