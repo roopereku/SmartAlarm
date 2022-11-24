@@ -173,6 +173,36 @@ function highlightNode(node, color)
 	title.style.borderBottom = "1px solid " + color
 }
 
+function disableNode(name) {
+	let nodes = editor.getNodesFromName(name)
+	console.log("nodes: " + nodes)
+
+	nodes.forEach((id) => {
+		let node = document.getElementById("node-" + id)
+		node.classList.add("grayout")
+
+		let inputs = node.getElementsByClassName("nodeValue")
+		for (let i = 0; i < inputs.length; i++) {
+			inputs[i].setAttribute("disabled", "")
+		}
+	})
+}
+
+function enableNode(name) {
+	let nodes = editor.getNodesFromName(name)
+	console.log("nodes: " + nodes)
+
+	nodes.forEach((id) => {
+		let node = document.getElementById("node-" + id)
+		node.classList.remove("grayout")
+
+		let inputs = node.getElementsByClassName("nodeValue")
+		for (let i = 0; i < inputs.length; i++) {
+			inputs[i].removeAttribute("disabled")
+		}
+	})
+}
+
 editor.start();
 
 // Events!

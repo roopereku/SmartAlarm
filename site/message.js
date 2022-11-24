@@ -37,11 +37,16 @@ ws.addEventListener('message', (event) => {
 	}
 
 	else if(msg.cmd == "dead") {
+		disableNode(msg.arg[0])
 		Swal.fire(
 		  'Connection dead',
-		  "Node " + msg.arg[0] + " has lost it's connection",
+		  "Node " + msg.arg[1] + " has lost it's connection",
 		  'error'
 		)
+	}
+
+	else if(msg.cmd == "alive") {
+		enableNode(msg.arg[0])
 	}
 
 	else if(msg.cmd == "login") {

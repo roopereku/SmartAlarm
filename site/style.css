@@ -11,3 +11,11 @@
 	width: 100%;
 	text-align: center;
 }
+
+.drawflow-node {
+	transition: opacity 1s;
+}
+
+.grayout {
+	opacity: 0.5;
+}
