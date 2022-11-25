@@ -86,6 +86,6 @@ elif platform == "darwin":
 
 elif platform == "win32":
     #easygui.msgbox("windoze", title="Platform")
-    device_id = "COM0"
+    device_id = "COM9"
 
 asyncio.run(start_server())

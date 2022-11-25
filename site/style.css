@@ -1,3 +1,21 @@
 .title-box {
 	transition: background-color 1s linear, border-bottom 1s linear;
 }
+
+.node-menu {
+	border: none;
+	border-bottom: 1px solid var(--border-color);
+	height: 41px;
+	line-height: 30px;
+	font-size: 16px;
+	width: 100%;
+	text-align: center;
+}
+
+.drawflow-node {
+	transition: opacity 1s;
+}
+
+.grayout {
+	opacity: 0.5;
+}

@@ -8,6 +8,10 @@ editor.draggable_inputs = false;
 
 let nodeFormats = {}
 
+function encrypt(pass) {
+	return CryptoJS.PBKDF2(pass, 'salt', { keySize: 512/64, iterations: 1000, hasher:CryptoJS.algo.SHA512 }).toString(CryptoJS.enc.Hex);
+}
+
 function showLoginWindow() {
 	function getCookie(name) {
 		const value = `; ${document.cookie}`;
@@ -30,10 +34,15 @@ function showLoginWindow() {
 			title: 'Enter the passcode',
 			input: 'password',
 		}).then((result) => {
-			handleLogin(result.value)
-			document.cookie = "passcode=" + result.value + "; Path=/; SameSite=None; Secure"
+			handleLogin(encrypt(result.value))
+			document.cookie = "passcode=" + encrypt(result.value) + "; Path=/; SameSite=None; Secure"
 		})
 	}
+}
+
+function logout() {
+	document.cookie = "passcode=; Path=/; SameSite=None; Secure"
+	location.reload()
 }
 
 function setLayout(layoutJSON) {
@@ -98,7 +107,7 @@ function updateParameters(e) {
 	}
 }
 
-function addNodeListing(type, name, isSensor) {
+function addNodeListing(type, name, context, icon) {
 	let listings = document.getElementById("listings")
 	let entry = document.createElement("div")
 
@@ -106,17 +115,34 @@ function addNodeListing(type, name, isSensor) {
 	entry.draggable = true
 	entry.setAttribute("ondragstart", "drag(event)")
 	entry.setAttribute("data-node", type + ":" + name)
+	entry.setAttribute("context", context)
 
-	let icon = document.createElement("i")
-	icon.className="fas fa-lightbulb"
+	let iconElement = document.createElement("i")
+	iconElement.className = icon
 
 	let text = document.createElement("span")
 	text.innerHTML = name
+	text.style.margin = "10px"
 
-	entry.appendChild(icon)
+	entry.appendChild(iconElement)
 	entry.appendChild(text)
 
 	listings.appendChild(entry)
+}
+
+function showNodesWithContext(context) {
+	let listings = document.getElementById("listings")
+	let children = listings.children
+
+	for (let i = 0; i < children.length; i++) {
+		if (children[i].className === 'drag-drawflow') {
+			if (children[i].getAttribute("context") !== context && context !== "all") {
+				children[i].style.display = "none"
+			} else {
+				children[i].style.display = "block"
+			}
+		}
+	}
 }
 
 function getNodeTitle(node)
@@ -145,6 +171,36 @@ function highlightNode(node, color)
 	let title = getNodeTitle(node)
 	title.style.backgroundColor = color
 	title.style.borderBottom = "1px solid " + color
+}
+
+function disableNode(name) {
+	let nodes = editor.getNodesFromName(name)
+	console.log("nodes: " + nodes)
+
+	nodes.forEach((id) => {
+		let node = document.getElementById("node-" + id)
+		node.classList.add("grayout")
+
+		let inputs = node.getElementsByClassName("nodeValue")
+		for (let i = 0; i < inputs.length; i++) {
+			inputs[i].setAttribute("disabled", "")
+		}
+	})
+}
+
+function enableNode(name) {
+	let nodes = editor.getNodesFromName(name)
+	console.log("nodes: " + nodes)
+
+	nodes.forEach((id) => {
+		let node = document.getElementById("node-" + id)
+		node.classList.remove("grayout")
+
+		let inputs = node.getElementsByClassName("nodeValue")
+		for (let i = 0; i < inputs.length; i++) {
+			inputs[i].removeAttribute("disabled")
+		}
+	})
 }
 
 editor.start();
@@ -282,15 +338,14 @@ function addNodeToDrawFlow(id, pos_x, pos_y) {
 	let [type, name] = id.split(":")
 	console.log(type, name)
 
-	let html = '<div><div class="title-box"><i class="fab fa-telegram-plane"></i> ' + name +
-				'</div><div class="box"><form onchange=updateParameters(this) onsubmit="return false">'
+	let html = '<div><div class="title-box">' + name +
+		'</div><div class="box"><form onchange=updateParameters(this) onsubmit="return false">'
 
 	for (const [nodeType, format] of Object.entries(nodeFormats)) {
 		if(nodeType == type)
 		{
-			console.log(format)
 			for (const [key, param] of Object.entries(format)) {
-				html += '<p>' + key + '</p>'
+				html += '<p>' + param.description + '</p>'
 
 				if(param.strict) {
 

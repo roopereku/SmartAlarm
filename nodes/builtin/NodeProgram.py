@@ -14,6 +14,7 @@ class node_test(node_base):
     def get_params_format(self):
         return {
             "program": {
+                "description" : "What program to start",
                 "strict": True,
                 "hint": {
                     "glxgears" : "GLX Gears"

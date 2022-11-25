@@ -30,7 +30,9 @@ public:
 	void setParamFormat(ParameterList& params) override
 	{
 		params["threshold"].type = "range";
+		params["threshold"].description = "What light level should be compared";
 
+		params["threshold"].description = "How should the light level be compared";
 		params["comparison"].strictHints = true;
 		params["comparison"].addHint("<", "Below the threshold");
 		params["comparison"].addHint(">", "Above the threshold");

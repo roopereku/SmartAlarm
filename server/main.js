@@ -2,7 +2,8 @@ const spawn = require("child_process").spawn
 const express = require('express')
 const http = require('http')
 const webSocket = require('ws')
-const net = require("net");
+const net = require("net")
+const crypto = require('crypto')
 
 const port = 3000
 const app = express()
@@ -12,10 +13,43 @@ app.use(express.static(__dirname + "/../site/"))
 let nodeValues = {}
 let layout = {}
 
-let loginPasscode = "admin"
+let loginPasscode = "11dc1d3da523b078578806b4cf6ee2baad0cd9f26d6da62c3fe87c2520be7b1f"
+console.log(encrypt("admin"))
+function encrypt(pass) {
+	return crypto.pbkdf2Sync(pass, 'salt', 1000, 512/16, 'sha512').toString('hex');
+}
+
+function recoverNodeState(node) {
+	node.instances.forEach((i) => {
+		sendToNode(node, i.num + "\r" + "instance")
+
+		let instanceParams = nodeValues[node.ID][i.num]
+		sendToNode(node, i.num + "\r" + instanceParams)
+		handleActivate(i)
+	})
+}
 
 const server = net.createServer((client) => {
 	console.log("Connection from ", client.remoteAddress)
+
+    client.setKeepAlive(true, 1000);
+
+	client.on("error", (e) => {
+		let node = activeNodes.find((n) => client === n.connection)
+
+		console.log(node.ID, "Died")
+		node.connection = undefined
+
+		node.instances.forEach((i) => {
+			i.passed = false
+			trigger(i)
+		})
+
+		sendToAll({
+			cmd : "dead",
+			arg : [ node.ID, node.name ]
+		})
+	})
 
 	client.on("data", (data) => {
 		/*	When using plain TCP, it's possible that separate messages
@@ -32,23 +66,40 @@ const server = net.createServer((client) => {
 			 *	sorts of relevant information so let's save it */
 			if(msg.id !== undefined)
 			{
-				let node = {};
-				node.instances = [];
-				node.builtin = false;
-				node.type = msg.type;
-				node.name = msg.name;
-				node.ID = msg.id
+				let node = activeNodes.find((n) => msg.id === n.ID)
 
-				node.context = msg.context;
-				node.paramFormat = msg.format;
-				node.connection = client
+				if(node === undefined) {
+					console.log("new node")
 
-				activeNodes.push(node);
-				nodeValues[node.ID] = {}
+					node = {};
+					node.instances = [];
+					node.builtin = false;
+					node.type = msg.type;
+					node.name = msg.name;
+					node.ID = msg.id;
+					node.icon = msg.icon;
+					node.context = msg.context;
+					node.paramFormat = msg.format;
+					node.connection = client;
 
-				ws.clients.forEach((client) => {
-					informAboutNode(node, client)
-				})
+					activeNodes.push(node);
+					nodeValues[node.ID] = {}
+
+					ws.clients.forEach((client) => {
+						informAboutNode(node, client)
+					})
+				}
+
+				else {
+					console.log(node.ID, "reconnected")
+					node.connection = client
+					recoverNodeState(node)
+
+					sendToAll({
+						cmd : "alive",
+						arg : [ node.ID, node.name ]
+					})
+				}
 			}
 
 			//	Is result present
@@ -85,7 +136,8 @@ function informAboutNode(node, client) {
 		name : node.name,
 		type : node.type,
 		format : node.paramFormat,
-		context : node.context
+		context : node.context,
+		icon : node.icon
 	}
 
 	client.send(JSON.stringify(msg));
@@ -131,7 +183,7 @@ ws.on("connection", (c) => {
 		console.log(msg)
 
 		if(!c.authenticated && msg.cmd == "login") {
-			c.authenticated = msg.arg[0] === loginPasscode
+			c.authenticated = loginPasscode === msg.arg[0]
 			msg.result = c.authenticated
 			c.send(JSON.stringify(msg))
 			

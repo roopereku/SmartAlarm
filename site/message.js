@@ -19,9 +19,10 @@ ws.addEventListener('message', (event) => {
 	else if(msg.cmd == "nodeadd") {
 		console.log("node type", msg.type)
 		console.log("node name", msg.name)
-		console.log("is sensor", msg.sensor)
+		console.log("context", msg.context)
+		console.log("icon", msg.icon)
 
-		addNodeListing(msg.type, msg.name, msg.sensor)
+		addNodeListing(msg.type, msg.name, msg.context, msg.icon)
 		addNodeFormat(msg.type, msg.format)
 	}
 
@@ -33,6 +34,19 @@ ws.addEventListener('message', (event) => {
 	else if(msg.cmd === "passed") {
 		console.log(msg.arg)
 		highlightNodeByID(msg.arg[0], msg.arg[1], msg.arg[2] ? "green" : "red")
+	}
+
+	else if(msg.cmd == "dead") {
+		disableNode(msg.arg[0])
+		Swal.fire(
+		  'Connection dead',
+		  "Node " + msg.arg[1] + " has lost it's connection",
+		  'error'
+		)
+	}
+
+	else if(msg.cmd == "alive") {
+		enableNode(msg.arg[0])
 	}
 
 	else if(msg.cmd == "login") {

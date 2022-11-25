@@ -21,8 +21,8 @@ class node_discord(node_base):
     def get_params_format(self):
         return {
             "message": {
+              "description": "What message to send",
               "type": "text"
-
             }
         }
 

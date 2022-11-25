@@ -11,8 +11,9 @@ public:
 	{
 	}
 
-	std::string defaultValue = "";
-	std::string type = "string";
+	std::string description = "No description";
+	std::string type = "text";
+
 	bool strictHints = false;
 
 	void addHint(const char* name, const char* description);

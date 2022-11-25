@@ -8,7 +8,7 @@ void ParameterInfo::addHint(const char* name, const char* description)
 std::string ParameterInfo::toJSON()
 {
 	std::string json =
-		"{\"default\": \"" + defaultValue + "\", \"type\": \"" + type +
+		"{\"description\": \"" + description + "\", \"type\": \"" + type +
 		"\", \"strict\": " + (strictHints ? "true" : "false") + ", \"hint\": {";
 
 	for(size_t i = 0; i < hints.size(); i++)

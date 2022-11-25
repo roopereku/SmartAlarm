@@ -109,7 +109,7 @@ cursor: pointer;
   float: right;
   position: absolute;
   top: 10px;
-  right: 150px;
+  right: 90px;
   color: white;
   font-weight: bold;
   border: 1px solid #51980f;
@@ -120,11 +120,11 @@ cursor: pointer;
   z-index: 5;
 }
 
-.btn-clear {
+.btn-logout {
   float: right;
   position: absolute;
   top: 10px;
-  right: 85px;
+  right: 10px;
   color: white;
   font-weight: bold;
   border: 1px solid #96015b;

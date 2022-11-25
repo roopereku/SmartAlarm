@@ -28,8 +28,8 @@ class node_telegram(node_base):
     def get_params_format(self):
         return {
             "message": {
-            "type": "text"
-
+                "description" : "What message to send",
+                "type": "text"
             }
         }
 load_dotenv()

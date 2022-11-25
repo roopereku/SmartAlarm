@@ -75,6 +75,7 @@ private:
 	unsigned delay;
 
 protected:
+	const char* icon = "fa-solid fa-question";
 };
 
 #endif

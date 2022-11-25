@@ -173,7 +173,7 @@ void NodeBase::respondFormat()
 		case NodeContext::Action: contextString = "action"; break;
 	}
 
-	std::string json =	"{\"format\": {" + formatJSON + "}, \"context\": \"" + contextString + "\", \"id\": \"" + ID + "\", \"name\": \"" + name + "\", \"type\": \"" + type + "\"}";
+	std::string json =	"{\"format\": {" + formatJSON + "}, \"context\": \"" + contextString + "\", \"id\": \"" + ID + "\", \"icon\": \"" + icon + "\", \"name\": \"" + name + "\", \"type\": \"" + type + "\"}";
 	respond(json);
 }
 
