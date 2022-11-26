@@ -57,7 +57,6 @@ const server = net.createServer((client) => {
 		 *	with newlines because that shouldn't be in a JSON */
 		const jsons = data.toString().trim().split("\n")
 		jsons.forEach((json) => {
-
 			const msg = JSON.parse(json)
 			console.log(msg)
 
@@ -179,115 +178,121 @@ ws.on("connection", (c) => {
 	c.authenticated = false
 
 	c.on("message", (payload) => {
-		const msg = JSON.parse(payload.toString())
-		console.log(msg)
+		try {
+			const msg = JSON.parse(payload.toString())
+			console.log(msg)
 
-		if(!c.authenticated && msg.cmd == "login") {
-			c.authenticated = loginPasscode === msg.arg[0]
-			msg.result = c.authenticated
-			c.send(JSON.stringify(msg))
-			
-			//	Has the user logged in succesfully
-			if(msg.result) {
-				//	Inform about connected nodes
-				activeNodes.forEach((n) => {
-					informAboutNode(n, c)
-				})
+			if(!c.authenticated && msg.cmd == "login") {
+				c.authenticated = loginPasscode === msg.arg[0]
+				msg.result = c.authenticated
+				c.send(JSON.stringify(msg))
+				
+				//	Has the user logged in succesfully
+				if(msg.result) {
+					//	Inform about connected nodes
+					activeNodes.forEach((n) => {
+						informAboutNode(n, c)
+					})
 
-				//	Inform about the layout
-				sendLayout(c)
+					//	Inform about the layout
+					sendLayout(c)
+				}
+
+				return
 			}
 
-			return
-		}
-
-		else if(!c.authenticated)
-		{
-			console.log("Not logged in")
-			return
-		}
-
-		if(msg.cmd === "layout") {
-			layout = msg.arg[0]
-		}
-
-		else if(msg.cmd === "instance") {
-			const ID = msg.arg[0]
-			node = activeNodes.find((n) => ID === n.ID);
-
-			if(node === undefined)
-				msg.error = true
-
-			else {
-				sendToNode(node, msg.arg[1] + "\r" + "instance")
-				msg.result = createInstance(node, msg.arg[1])
-
-				nodeValues[ID][msg.arg[1]] = ""
-				console.log(nodeValues)
+			else if(!c.authenticated)
+			{
+				console.log("Not logged in")
+				return
 			}
-		}
 
-		else if(msg.cmd === "removeinstance") {
-			let node = undefined
-			let instance = undefined
+			if(msg.cmd === "layout") {
+				layout = msg.arg[0]
+			}
 
-			console.log(layout)
+			else if(msg.cmd === "instance") {
+				const ID = msg.arg[0]
+				node = activeNodes.find((n) => ID === n.ID);
 
-			/*	Because drawflow actually removes a node before it tells the user about it,
-			 *	we need to fetch information about the instance from an old version of the layout */
-			checkLoop:
-			for (const [modName, module] of Object.entries(layout.drawflow)) {
-				for (const [key, value] of Object.entries(module.data)) {
-					if(key === msg.arg[0].toString()) {
-						console.log("Found")
-						node = activeNodes.find((n) => value.name === n.ID)
-						instance = findInstance(node, value.data.instance)
-						break checkLoop
+				if(node === undefined)
+					msg.error = true
+
+				else {
+					sendToNode(node, msg.arg[1] + "\r" + "instance")
+					msg.result = createInstance(node, msg.arg[1])
+
+					nodeValues[ID][msg.arg[1]] = ""
+					console.log(nodeValues)
+				}
+			}
+
+			else if(msg.cmd === "removeinstance") {
+				let node = undefined
+				let instance = undefined
+
+				console.log(layout)
+
+				/*	Because drawflow actually removes a node before it tells the user about it,
+				 *	we need to fetch information about the instance from an old version of the layout */
+				checkLoop:
+				for (const [modName, module] of Object.entries(layout.drawflow)) {
+					for (const [key, value] of Object.entries(module.data)) {
+						if(key === msg.arg[0].toString()) {
+							console.log("Found")
+							node = activeNodes.find((n) => value.name === n.ID)
+							instance = findInstance(node, value.data.instance)
+							break checkLoop
+						}
 					}
 				}
-			}
 
-			if(instance === undefined) {
-				console.log("Instance is undefined when removing")
-			}
-
-			else {
-				const index = node.instances.indexOf(instance)
-
-				if(index > -1) {
-					console.log("Removed instance", node.ID, instance.num)
-					sendToNode(node, instance.num + "\r" + "removeinstance")
-
-					delete nodeValues[node.ID][instance.num]
-					console.log(nodeValues[node.ID], instance.num)
-					node.instances.splice(index, 1)
+				if(instance === undefined) {
+					console.log("Instance is undefined when removing")
 				}
 
-				else console.log("Index -1")
+				else {
+					const index = node.instances.indexOf(instance)
+
+					if(index > -1) {
+						console.log("Removed instance", node.ID, instance.num)
+						sendToNode(node, instance.num + "\r" + "removeinstance")
+
+						delete nodeValues[node.ID][instance.num]
+						console.log(nodeValues[node.ID], instance.num)
+						node.instances.splice(index, 1)
+					}
+
+					else console.log("Index -1")
+				}
 			}
+
+			else if(msg.cmd === "depend") {
+				msg.result = addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+			}
+
+			else if(msg.cmd == "undepend") {
+				removeDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+			}
+
+			else if(msg.cmd === "parameters") {
+				let node = activeNodes.find((n) => msg.arg[0] === n.ID);
+
+				/*	Because the node deactivates itself when it receives new parameters,
+				 *	reactivate it if it should be active */
+				sendToNode(node, msg.arg[1] + "\r" + msg.arg[2])
+				handleActivate(findInstance(node, msg.arg[1]))
+
+				nodeValues[msg.arg[0]][msg.arg[1]] = msg.arg[2]
+				console.log(nodeValues)
+			}
+
+			sendToAll(msg);
 		}
 
-		else if(msg.cmd === "depend") {
-			msg.result = addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+		catch(e) {
+			console.log("JSON was invalid")
 		}
-
-		else if(msg.cmd == "undepend") {
-			removeDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
-		}
-
-		else if(msg.cmd === "parameters") {
-			let node = activeNodes.find((n) => msg.arg[0] === n.ID);
-
-			/*	Because the node deactivates itself when it receives new parameters,
-			 *	reactivate it if it should be active */
-			sendToNode(node, msg.arg[1] + "\r" + msg.arg[2])
-			handleActivate(findInstance(node, msg.arg[1]))
-
-			nodeValues[msg.arg[0]][msg.arg[1]] = msg.arg[2]
-			console.log(nodeValues)
-		}
-
-		sendToAll(msg);
 	})
 })
 
