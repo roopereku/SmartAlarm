@@ -82,13 +82,6 @@ private:
     unsigned char low_values[8] = {0};
     int threshold = 100;
 
-    static void blink() {
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
-        sleep_ms(50);
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
-        sleep_ms(50);
-    }
-
     /* Measure values from the upper 12 pads */
     void getHigh12Values() {
         uint8_t value;
