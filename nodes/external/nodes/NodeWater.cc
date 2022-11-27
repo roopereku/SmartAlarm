@@ -10,7 +10,9 @@
 class NodeWater : public NodeBase {
 public:
     NodeWater() : NodeBase("water", NodeContext::Sensor, 100) {
-        i2c_init(i2c_default, 100 * 1000); // I2C init
+        // I2C init
+        i2c_init(i2c_default, 100 * 1000);
+        // GPIO init
         gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C); // GP4 pin
         gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C); // GP5 pin
         gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
@@ -28,8 +30,8 @@ public:
         uint8_t trig_section = 0;
         float water_level;
 
-        getHigh12Values();
-        getLow8Values();
+        getHigh12Values(); // Top 12 pads
+        getLow8Values();  // Bottom 8 pads
         printValues();
 
         // Check low pads
@@ -124,5 +126,5 @@ private:
 
 int main() {
     NodeWater node;
-    node.run();
+    node.run(); // TODO: Make this interrupt driven and maximize low power sleep time
 }
