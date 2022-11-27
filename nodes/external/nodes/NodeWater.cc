@@ -4,6 +4,8 @@
 #include "hardware/i2c.h"
 #include "NodeBase.hh"
 
+// TODO: If WaterNode is submerged while restart the water level will not be measured correctly
+
 class NodeWater : public NodeBase {
 public:
     NodeWater() : NodeBase("water", NodeContext::Sensor, 100) {
