@@ -4,9 +4,6 @@
 #include "hardware/i2c.h"
 #include "NodeBase.hh"
 
-// TODO: Make this interrupt driven, maximize the sleeping time
-// TODO: Show numbers when sliding the threshold value
-
 class NodeWater : public NodeBase {
 public:
     NodeWater() : NodeBase("water", NodeContext::Sensor, 100) {
@@ -25,9 +22,9 @@ public:
     bool check(Params &params) override {
         auto &cmp = params["comparison"];
         const uint16_t multiplier = 10;
-        const uint16_t paramReal = atoi(params["threshold"].c_str()) * multiplier; // Range 0-100
+        const float paramReal = atoi(params["threshold"].c_str()) * multiplier; // Range 0-100 TODO: Sanitize the input
         uint32_t pads = 0;
-        uint8_t trig_section = 0;
+        float trig_section = 0;
         float water_level;
 
         getHigh12Values(); // Top 12 pads
@@ -60,13 +57,15 @@ public:
     }
 
     void setParamFormat(ParameterList &params) override {
+        // TODO: Show numbers when sliding the threshold value
+
         params["threshold"].type = "number";
         params["threshold"].description = "Threshold [cm]";
 
         params["comparison"].strictHints = true;
         params["comparison"].description = "Water level";
-        params["comparison"].addHint(">", "Above the threshold");
-        params["comparison"].addHint("<", "Below the threshold");
+        params["comparison"].addHint(">", "Above threshold");
+        params["comparison"].addHint("<", "Below threshold");
     }
 
     Status validateParams(Params &params) override {
