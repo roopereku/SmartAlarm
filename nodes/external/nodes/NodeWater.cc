@@ -53,7 +53,7 @@ public:
         if (water_level > 0) {
             printf("Water level: %.2f cm\n\n", (water_level / 10));
         }
-        return cmp == ">" ? water_level >= paramReal : water_level < paramReal;
+        return cmp == ">" ? water_level > paramReal : water_level < paramReal;
     }
 
     void setParamFormat(ParameterList &params) override {
