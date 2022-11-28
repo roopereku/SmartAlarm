@@ -2,7 +2,7 @@
 
 class NodeGPInput : public NodeBase {
 public:
-    NodeGPInput() : NodeBase("GPOutput", NodeContext::Sensor, 100) {
+    NodeGPInput() : NodeBase("gpi", NodeContext::Sensor, 100) {
         for (int i = 2; i <= 16; i++) {
             gpio_init(i);
             gpio_set_dir(i, GPIO_IN);

@@ -2,7 +2,7 @@
 
 class NodeGPOutput : public NodeBase {
 public:
-    NodeGPOutput() : NodeBase("GPOutput", NodeContext::Action, 0) {
+    NodeGPOutput() : NodeBase("gpo", NodeContext::Action, 0) {
         for (int i = 2; i <= 16; i++) {
             gpio_init(i);
             gpio_set_dir(i, GPIO_OUT);
