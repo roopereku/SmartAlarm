@@ -1,9 +1,10 @@
 const spawn = require("child_process").spawn
 const express = require('express')
-const http = require('http')
-const webSocket = require('ws')
-const net = require("net")
 const crypto = require('crypto')
+const webSocket = require('ws')
+const http = require('http')
+const net = require("net")
+const fs = require("fs")
 
 const port = 3000
 const app = express()
@@ -27,6 +28,117 @@ function recoverNodeState(node) {
 		sendToNode(node, i.num + "\r" + instanceParams)
 		handleActivate(i)
 	})
+}
+
+function saveSession() {
+	console.log("saving...")
+	try {
+		fs.mkdirSync("session")
+	}
+
+	catch(e) {}
+
+	fs.writeFile("session/layout.json", JSON.stringify(layout), (err) => {
+		if(err) console.log(err)
+	})
+
+	let instanceData = {}
+	activeNodes.forEach((n) => {
+		instanceData[n.ID] = []
+		console.log("Values at", n.ID, nodeValues[n.ID])
+		console.log("Instances", n.instances)
+
+		n.instances.forEach((i) => {
+			instanceDependencies = []
+
+			i.dependencies.forEach((d) => {
+				instanceDependencies.push(d.num)
+			})
+
+			console.log("at", i.num, nodeValues[n.ID][i.num])
+
+			instanceData[n.ID].push({
+				num : i.num,
+				params : nodeValues[n.ID][i.num],
+				dependencies : instanceDependencies
+			})
+		})
+	})
+
+	fs.writeFile("session/instances.json", JSON.stringify(instanceData), (err) => {
+		if(err) console.log(err)
+	})
+}
+
+function loadSession() {
+	try {
+		fs.mkdirSync("session")
+	}
+
+	catch(e) {}
+
+	if(!fs.existsSync("session/instances.json")) {
+		fs.writeFileSync("session/instances.json", "{}")
+	}
+
+	if(!fs.existsSync("session/layout.json")) {
+		fs.writeFileSync("session/layout.json", "{}")
+	}
+
+	fs.readFile("session/layout.json", 'utf8', (err, data) => {
+		if(err) {
+			console.error(err);
+			return;
+		}
+
+		layout = JSON.parse(data)
+	});
+
+	fs.readFile("session/instances.json", 'utf8', (err, data) => {
+		if(err) {
+			console.error(err);
+			return;
+		}
+
+		let instanceData = JSON.parse(data)
+		for (const [key, value] of Object.entries(instanceData)) {
+			//	There should be no nodes at this point
+			let name = key.split(":")[1]
+			let node = { ID: key, name: name, instances: [] }
+			nodeValues[key] = {}
+
+			value.forEach((i) => {
+				node.instances.push({
+					num: i.num,
+					parent: node,
+					dependencies: []
+				})
+				
+				nodeValues[key][i.num] = i.params
+			})
+
+			activeNodes.push(node)
+		}
+
+		activeNodes.forEach((n) => {
+			for(let i = 0; i < n.instances.length; i++) {
+				//	Look for each dependency of this instance
+				instanceData[n.ID][i].dependencies.forEach((d) => {
+					//	Loop through each node again so that we can find the dependency
+					activeNodes.forEach((n2) => {
+						//	Does any ID of the instances match the dependency
+						let dep = n2.instances.find((inst) => inst.num == d)
+
+						//	We have a match!
+						if(dep !== undefined)
+							n.instances[i].dependencies.push(dep)
+					})
+				})
+			}
+		})
+
+		console.log(activeNodes)
+	});
 }
 
 const server = net.createServer((client) => {
@@ -66,30 +178,35 @@ const server = net.createServer((client) => {
 			if(msg.id !== undefined)
 			{
 				let node = activeNodes.find((n) => msg.id === n.ID)
+				const reconnect = node !== undefined
+				const afterReboot = reconnect && node.context === undefined
 
-				if(node === undefined) {
+				if(!reconnect) {
 					console.log("new node")
-
 					node = {};
+
 					node.instances = [];
-					node.builtin = false;
-					node.type = msg.type;
-					node.name = msg.name;
 					node.ID = msg.id;
-					node.icon = msg.icon;
-					node.context = msg.context;
-					node.paramFormat = msg.format;
-					node.connection = client;
 
 					activeNodes.push(node);
 					nodeValues[node.ID] = {}
+				}
 
+				node.icon = msg.icon;
+				node.context = msg.context;
+				node.paramFormat = msg.format;
+				node.connection = client;
+				node.type = msg.type;
+				node.name = msg.name;
+
+				if(!reconnect || afterReboot) {
 					ws.clients.forEach((client) => {
 						informAboutNode(node, client)
 					})
 				}
 
-				else {
+				//	Only recover the node state if it ever disconnected
+				if(reconnect) {
 					console.log(node.ID, "reconnected")
 					node.connection = client
 					recoverNodeState(node)
@@ -140,10 +257,12 @@ function informAboutNode(node, client) {
 		icon : node.icon
 	}
 
-	client.send(JSON.stringify(msg));
+	//	Send the listing if there's a connection
+	if(node.connection !== undefined)
+		client.send(JSON.stringify(msg));
 
 	//	Is the connection is dead?
-	if(node.connection === undefined)
+	else
 	{
 		/*	For some reason the frontend doesn't like it when the "dead"
 		 *	message is sent immediately. To fix that let's add a small delay :-) */
@@ -301,11 +420,15 @@ ws.on("connection", (c) => {
 				console.log(nodeValues)
 			}
 
+			else if(msg.cmd == "save") {
+				saveSession()
+			}
+
 			sendToAll(msg);
 		}
 
 		catch(e) {
-			console.log("JSON was invalid")
+			console.log(e)
 		}
 	})
 })
@@ -472,13 +595,15 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
+	loadSession()
+
 	server.listen(4242, () => {
 		startBuiltinNode("NodeTest", "test1");
-		startBuiltinNode("NodeTime", "time1");
+		//startBuiltinNode("NodeTime", "time1");
 		startBuiltinNode("NodeDay", "day1");
-		startBuiltinNode("NodeLoop", "loop1");
-		startBuiltinNode("NodeSleep", "sleep1");
-		startBuiltinNode("NodeCounter", "counter1");
-		startBuiltinNode("NodeProgram", "program1");
+		//startBuiltinNode("NodeLoop", "loop1");
+		//startBuiltinNode("NodeSleep", "sleep1");
+		//startBuiltinNode("NodeCounter", "counter1");
+		//startBuiltinNode("NodeProgram", "program1");
 	})
 })
