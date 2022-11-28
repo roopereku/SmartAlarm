@@ -13,7 +13,7 @@ public:
         bool paramBool = atoi(params["state"].c_str());
         int paramPin = atoi(params["which"].c_str());
 
-        printf("GPIO state: %d", gpio_get(paramPin));
+        printf("GPIO state: %d\n", gpio_get(paramPin));
 
         if (paramBool) {
             return gpio_get(paramPin);
