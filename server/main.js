@@ -118,7 +118,8 @@ const httpServer = http.createServer(app).listen(3001)
 const ws = new webSocket.Server({ server: httpServer })
 
 function sendToNode(node, message) {
-	node.connection.write(message + "\n")
+	if(node.connection !== undefined)
+		node.connection.write(message + "\n")
 }
 
 function sendToAll(json) {
@@ -140,6 +141,19 @@ function informAboutNode(node, client) {
 	}
 
 	client.send(JSON.stringify(msg));
+
+	//	Is the connection is dead?
+	if(node.connection === undefined)
+	{
+		/*	For some reason the frontend doesn't like it when the "dead"
+		 *	message is sent immediately. To fix that let's add a small delay :-) */
+		setTimeout(() => {
+			client.send(JSON.stringify({
+				cmd : "dead",
+				arg : [ node.ID, node.name ]
+			}));
+		}, 500)
+	}
 }
 
 function findInstance(node, num) {
