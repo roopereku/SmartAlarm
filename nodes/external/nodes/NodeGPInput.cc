@@ -9,13 +9,15 @@ public:
         }
     }
 
-    void activate(Params &params) override {
-        gpio_put(atoi(params["which"].c_str()), atoi(params["state"].c_str()));
-        printf("%d\n", gpio_get(28));
-    }
+    bool check(Params &params) override {
+        bool paramBool = atoi(params["state"].c_str());
+        int paramPin = atoi(params["which"].c_str());
 
-    void deactivate(Params &params) override {
-        gpio_put(atoi(params["which"].c_str()), 0);
+        if (paramBool) {
+            return gpio_get(paramPin);
+        } else {
+            return !gpio_get(paramPin);
+        }
     }
 
     void setParamFormat(ParameterList &params) override {
