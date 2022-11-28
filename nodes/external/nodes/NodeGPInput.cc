@@ -1,8 +1,11 @@
 #include "NodeBase.hh"
 
+// TODO: Make one general purpose GPIO class that can act as Sensor and Action
+
 class NodeGPInput : public NodeBase {
 public:
     NodeGPInput() : NodeBase("gpi", NodeContext::Sensor, 100) {
+        // TODO: Init only selected GPIO pin and add option to select and conf more than one
         for (int i = 2; i <= 16; i++) {
             gpio_init(i);
             gpio_set_dir(i, GPIO_IN);
