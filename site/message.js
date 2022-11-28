@@ -107,6 +107,15 @@ function addInstance(node) {
 	})
 }
 
+function save() {
+	console.log("Saving!")
+
+	sendMessage({
+		cmd: "save",
+		arg: []
+	})
+}
+
 function removeInstance(id) {
 	sendMessage({
 		cmd: "removeinstance",
