@@ -1,9 +1,10 @@
 const spawn = require("child_process").spawn
 const express = require('express')
-const http = require('http')
-const webSocket = require('ws')
-const net = require("net")
 const crypto = require('crypto')
+const webSocket = require('ws')
+const http = require('http')
+const net = require("net")
+const fs = require("fs")
 
 const port = 3000
 const app = express()
@@ -27,6 +28,117 @@ function recoverNodeState(node) {
 		sendToNode(node, i.num + "\r" + instanceParams)
 		handleActivate(i)
 	})
+}
+
+function saveSession() {
+	console.log("saving...")
+	try {
+		fs.mkdirSync("session")
+	}
+
+	catch(e) {}
+
+	fs.writeFile("session/layout.json", JSON.stringify(layout), (err) => {
+		if(err) console.log(err)
+	})
+
+	let instanceData = {}
+	activeNodes.forEach((n) => {
+		instanceData[n.ID] = []
+		console.log("Values at", n.ID, nodeValues[n.ID])
+		console.log("Instances", n.instances)
+
+		n.instances.forEach((i) => {
+			instanceDependencies = []
+
+			i.dependencies.forEach((d) => {
+				instanceDependencies.push(d.num)
+			})
+
+			console.log("at", i.num, nodeValues[n.ID][i.num])
+
+			instanceData[n.ID].push({
+				num : i.num,
+				params : nodeValues[n.ID][i.num],
+				dependencies : instanceDependencies
+			})
+		})
+	})
+
+	fs.writeFile("session/instances.json", JSON.stringify(instanceData), (err) => {
+		if(err) console.log(err)
+	})
+}
+
+function loadSession() {
+	try {
+		fs.mkdirSync("session")
+	}
+
+	catch(e) {}
+
+	if(!fs.existsSync("session/instances.json")) {
+		fs.writeFileSync("session/instances.json", "{}")
+	}
+
+	if(!fs.existsSync("session/layout.json")) {
+		fs.writeFileSync("session/layout.json", "{}")
+	}
+
+	fs.readFile("session/layout.json", 'utf8', (err, data) => {
+		if(err) {
+			console.error(err);
+			return;
+		}
+
+		layout = JSON.parse(data)
+	});
+
+	fs.readFile("session/instances.json", 'utf8', (err, data) => {
+		if(err) {
+			console.error(err);
+			return;
+		}
+
+		let instanceData = JSON.parse(data)
+		for (const [key, value] of Object.entries(instanceData)) {
+			//	There should be no nodes at this point
+			let name = key.split(":")[1]
+			let node = { ID: key, name: name, instances: [] }
+			nodeValues[key] = {}
+
+			value.forEach((i) => {
+				node.instances.push({
+					num: i.num,
+					parent: node,
+					dependencies: []
+				})
+				
+				nodeValues[key][i.num] = i.params
+			})
+
+			activeNodes.push(node)
+		}
+
+		activeNodes.forEach((n) => {
+			for(let i = 0; i < n.instances.length; i++) {
+				//	Look for each dependency of this instance
+				instanceData[n.ID][i].dependencies.forEach((d) => {
+					//	Loop through each node again so that we can find the dependency
+					activeNodes.forEach((n2) => {
+						//	Does any ID of the instances match the dependency
+						let dep = n2.instances.find((inst) => inst.num == d)
+
+						//	We have a match!
+						if(dep !== undefined)
+							n.instances[i].dependencies.push(dep)
+					})
+				})
+			}
+		})
+
+		console.log(activeNodes)
+	});
 }
 
 const server = net.createServer((client) => {
@@ -57,7 +169,6 @@ const server = net.createServer((client) => {
 		 *	with newlines because that shouldn't be in a JSON */
 		const jsons = data.toString().trim().split("\n")
 		jsons.forEach((json) => {
-
 			const msg = JSON.parse(json)
 			console.log(msg)
 
@@ -67,30 +178,35 @@ const server = net.createServer((client) => {
 			if(msg.id !== undefined)
 			{
 				let node = activeNodes.find((n) => msg.id === n.ID)
+				const reconnect = node !== undefined
+				const afterReboot = reconnect && node.context === undefined
 
-				if(node === undefined) {
+				if(!reconnect) {
 					console.log("new node")
-
 					node = {};
+
 					node.instances = [];
-					node.builtin = false;
-					node.type = msg.type;
-					node.name = msg.name;
 					node.ID = msg.id;
-					node.icon = msg.icon;
-					node.context = msg.context;
-					node.paramFormat = msg.format;
-					node.connection = client;
 
 					activeNodes.push(node);
 					nodeValues[node.ID] = {}
+				}
 
+				node.icon = msg.icon;
+				node.context = msg.context;
+				node.paramFormat = msg.format;
+				node.connection = client;
+				node.type = msg.type;
+				node.name = msg.name;
+
+				if(!reconnect || afterReboot) {
 					ws.clients.forEach((client) => {
 						informAboutNode(node, client)
 					})
 				}
 
-				else {
+				//	Only recover the node state if it ever disconnected
+				if(reconnect) {
 					console.log(node.ID, "reconnected")
 					node.connection = client
 					recoverNodeState(node)
@@ -119,7 +235,8 @@ const httpServer = http.createServer(app).listen(3001)
 const ws = new webSocket.Server({ server: httpServer })
 
 function sendToNode(node, message) {
-	node.connection.write(message + "\n")
+	if(node.connection !== undefined)
+		node.connection.write(message + "\n")
 }
 
 function sendToAll(json) {
@@ -140,7 +257,22 @@ function informAboutNode(node, client) {
 		icon : node.icon
 	}
 
-	client.send(JSON.stringify(msg));
+	//	Send the listing if there's a connection
+	if(node.connection !== undefined)
+		client.send(JSON.stringify(msg));
+
+	//	Is the connection is dead?
+	else
+	{
+		/*	For some reason the frontend doesn't like it when the "dead"
+		 *	message is sent immediately. To fix that let's add a small delay :-) */
+		setTimeout(() => {
+			client.send(JSON.stringify({
+				cmd : "dead",
+				arg : [ node.ID, node.name ]
+			}));
+		}, 500)
+	}
 }
 
 function findInstance(node, num) {
@@ -179,115 +311,125 @@ ws.on("connection", (c) => {
 	c.authenticated = false
 
 	c.on("message", (payload) => {
-		const msg = JSON.parse(payload.toString())
-		console.log(msg)
+		try {
+			const msg = JSON.parse(payload.toString())
+			console.log(msg)
 
-		if(!c.authenticated && msg.cmd == "login") {
-			c.authenticated = loginPasscode === msg.arg[0]
-			msg.result = c.authenticated
-			c.send(JSON.stringify(msg))
-			
-			//	Has the user logged in succesfully
-			if(msg.result) {
-				//	Inform about connected nodes
-				activeNodes.forEach((n) => {
-					informAboutNode(n, c)
-				})
+			if(!c.authenticated && msg.cmd == "login") {
+				c.authenticated = loginPasscode === msg.arg[0]
+				msg.result = c.authenticated
+				c.send(JSON.stringify(msg))
+				
+				//	Has the user logged in succesfully
+				if(msg.result) {
+					//	Inform about connected nodes
+					activeNodes.forEach((n) => {
+						informAboutNode(n, c)
+					})
 
-				//	Inform about the layout
-				sendLayout(c)
+					//	Inform about the layout
+					sendLayout(c)
+				}
+
+				return
 			}
 
-			return
-		}
-
-		else if(!c.authenticated)
-		{
-			console.log("Not logged in")
-			return
-		}
-
-		if(msg.cmd === "layout") {
-			layout = msg.arg[0]
-		}
-
-		else if(msg.cmd === "instance") {
-			const ID = msg.arg[0]
-			node = activeNodes.find((n) => ID === n.ID);
-
-			if(node === undefined)
-				msg.error = true
-
-			else {
-				sendToNode(node, msg.arg[1] + "\r" + "instance")
-				msg.result = createInstance(node, msg.arg[1])
-
-				nodeValues[ID][msg.arg[1]] = ""
-				console.log(nodeValues)
+			else if(!c.authenticated)
+			{
+				console.log("Not logged in")
+				return
 			}
-		}
 
-		else if(msg.cmd === "removeinstance") {
-			let node = undefined
-			let instance = undefined
+			if(msg.cmd === "layout") {
+				layout = msg.arg[0]
+			}
 
-			console.log(layout)
+			else if(msg.cmd === "instance") {
+				const ID = msg.arg[0]
+				node = activeNodes.find((n) => ID === n.ID);
 
-			/*	Because drawflow actually removes a node before it tells the user about it,
-			 *	we need to fetch information about the instance from an old version of the layout */
-			checkLoop:
-			for (const [modName, module] of Object.entries(layout.drawflow)) {
-				for (const [key, value] of Object.entries(module.data)) {
-					if(key === msg.arg[0].toString()) {
-						console.log("Found")
-						node = activeNodes.find((n) => value.name === n.ID)
-						instance = findInstance(node, value.data.instance)
-						break checkLoop
+				if(node === undefined)
+					msg.error = true
+
+				else {
+					sendToNode(node, msg.arg[1] + "\r" + "instance")
+					msg.result = createInstance(node, msg.arg[1])
+
+					nodeValues[ID][msg.arg[1]] = ""
+					console.log(nodeValues)
+				}
+			}
+
+			else if(msg.cmd === "removeinstance") {
+				let node = undefined
+				let instance = undefined
+
+				console.log(layout)
+
+				/*	Because drawflow actually removes a node before it tells the user about it,
+				 *	we need to fetch information about the instance from an old version of the layout */
+				checkLoop:
+				for (const [modName, module] of Object.entries(layout.drawflow)) {
+					for (const [key, value] of Object.entries(module.data)) {
+						if(key === msg.arg[0].toString()) {
+							console.log("Found")
+							node = activeNodes.find((n) => value.name === n.ID)
+							instance = findInstance(node, value.data.instance)
+							break checkLoop
+						}
 					}
 				}
-			}
 
-			if(instance === undefined) {
-				console.log("Instance is undefined when removing")
-			}
-
-			else {
-				const index = node.instances.indexOf(instance)
-
-				if(index > -1) {
-					console.log("Removed instance", node.ID, instance.num)
-					sendToNode(node, instance.num + "\r" + "removeinstance")
-
-					delete nodeValues[node.ID][instance.num]
-					console.log(nodeValues[node.ID], instance.num)
-					node.instances.splice(index, 1)
+				if(instance === undefined) {
+					console.log("Instance is undefined when removing")
 				}
 
-				else console.log("Index -1")
+				else {
+					const index = node.instances.indexOf(instance)
+
+					if(index > -1) {
+						console.log("Removed instance", node.ID, instance.num)
+						sendToNode(node, instance.num + "\r" + "removeinstance")
+
+						delete nodeValues[node.ID][instance.num]
+						console.log(nodeValues[node.ID], instance.num)
+						node.instances.splice(index, 1)
+					}
+
+					else console.log("Index -1")
+				}
 			}
+
+			else if(msg.cmd === "depend") {
+				msg.result = addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+			}
+
+			else if(msg.cmd == "undepend") {
+				removeDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+			}
+
+			else if(msg.cmd === "parameters") {
+				let node = activeNodes.find((n) => msg.arg[0] === n.ID);
+
+				/*	Because the node deactivates itself when it receives new parameters,
+				 *	reactivate it if it should be active */
+				sendToNode(node, msg.arg[1] + "\r" + msg.arg[2])
+				handleActivate(findInstance(node, msg.arg[1]))
+
+				nodeValues[msg.arg[0]][msg.arg[1]] = msg.arg[2]
+				console.log(nodeValues)
+			}
+
+			else if(msg.cmd == "save") {
+				saveSession()
+			}
+
+			sendToAll(msg);
 		}
 
-		else if(msg.cmd === "depend") {
-			msg.result = addDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
+		catch(e) {
+			console.log(e)
 		}
-
-		else if(msg.cmd == "undepend") {
-			removeDependency(msg.arg[0], parseInt(msg.arg[1]), msg.arg[2], parseInt(msg.arg[3]))
-		}
-
-		else if(msg.cmd === "parameters") {
-			let node = activeNodes.find((n) => msg.arg[0] === n.ID);
-
-			/*	Because the node deactivates itself when it receives new parameters,
-			 *	reactivate it if it should be active */
-			sendToNode(node, msg.arg[1] + "\r" + msg.arg[2])
-			handleActivate(findInstance(node, msg.arg[1]))
-
-			nodeValues[msg.arg[0]][msg.arg[1]] = msg.arg[2]
-			console.log(nodeValues)
-		}
-
-		sendToAll(msg);
 	})
 })
 
@@ -453,13 +595,15 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
+	loadSession()
+
 	server.listen(4242, () => {
 		startBuiltinNode("NodeTest", "test1");
-		startBuiltinNode("NodeTime", "time1");
+		//startBuiltinNode("NodeTime", "time1");
 		startBuiltinNode("NodeDay", "day1");
-		startBuiltinNode("NodeLoop", "loop1");
-		startBuiltinNode("NodeSleep", "sleep1");
-		startBuiltinNode("NodeCounter", "counter1");
-		startBuiltinNode("NodeProgram", "program1");
+		//startBuiltinNode("NodeLoop", "loop1");
+		//startBuiltinNode("NodeSleep", "sleep1");
+		//startBuiltinNode("NodeCounter", "counter1");
+		//startBuiltinNode("NodeProgram", "program1");
 	})
 })

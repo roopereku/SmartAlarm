@@ -6,18 +6,14 @@ NodeBase::NodeBase(const char* nodeType, NodeContext context, unsigned delay)
 	: type(nodeType), name(cfg.get("name").c_str()), ID(std::string(nodeType) + ":" + name), context(context), delay(delay)
 {
     stdio_init_all();
+    cyw43_arch_init();
 
 	gpio_init(16);
-	gpio_set_dir(16, GPIO_IN);
+	gpio_set_dir(16, GPIO_OUT);
 
-	//bool usb = stdio_usb_connected();
-	bool high16 = gpio_get(16);
-
-	if(high16)
-		cfg.startReading();
-
-    if(cyw43_arch_init())
-        printf("failed to initialise\n");
+	//	If the pico has USB power and the override is low, enter the config mode
+	bool usbPower = cyw43_arch_gpio_get(2) && !gpio_get(16);
+	if(usbPower) cfg.startReading();
 }
 
 void NodeBase::handleMessage(const std::string& message)

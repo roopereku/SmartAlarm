@@ -6,6 +6,8 @@ editor.reroute_fix_curvature = true;
 editor.force_first_input = false;
 editor.draggable_inputs = false;
 
+editor.addModule('test')
+
 let nodeFormats = {}
 
 function encrypt(pass) {
@@ -43,6 +45,10 @@ function showLoginWindow() {
 function logout() {
 	document.cookie = "passcode=; Path=/; SameSite=None; Secure"
 	location.reload()
+}
+
+function changeModulePage(module) {
+	editor.changeModule(module)
 }
 
 function setLayout(layoutJSON) {
@@ -173,7 +179,12 @@ function highlightNode(node, color)
 	title.style.borderBottom = "1px solid " + color
 }
 
+let disabledNodes = []
 function disableNode(name) {
+	if (!disabledNodes.includes(name)) {
+		disabledNodes.push(name)
+	}
+
 	let nodes = editor.getNodesFromName(name)
 	console.log("nodes: " + nodes)
 
@@ -189,6 +200,11 @@ function disableNode(name) {
 }
 
 function enableNode(name) {
+	let index = disabledNodes.indexOf(name);
+	if (index > -1) {
+		disabledNodes.splice(index, 1);
+	}
+
 	let nodes = editor.getNodesFromName(name)
 	console.log("nodes: " + nodes)
 
@@ -210,6 +226,10 @@ editor.on('nodeCreated', function(id) {
 	console.log("Node created " + id);
 	editor.updateNodeDataFromId(id, { instance: parseInt(id) })
 	let node = editor.getNodeFromId(id)
+
+	if (disabledNodes.includes(node.name)) {
+		disableNode(node.name)
+	}
 
 	console.log(node)
 

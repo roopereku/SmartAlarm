@@ -4,13 +4,14 @@
 #include "hardware/i2c.h"
 #include "NodeBase.hh"
 
-// TODO: Make this interrupt driven, maximize the sleeping time
-// TODO: Show numbers when sliding the threshold value
+// TODO: If WaterNode is submerged while restart the water level will not be measured correctly
 
 class NodeWater : public NodeBase {
 public:
     NodeWater() : NodeBase("water", NodeContext::Sensor, 100) {
-        i2c_init(i2c_default, 100 * 1000); // I2C init
+        // I2C init
+        i2c_init(i2c_default, 100 * 1000);
+        // GPIO init
         gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C); // GP4 pin
         gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C); // GP5 pin
         gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
@@ -23,13 +24,13 @@ public:
     bool check(Params &params) override {
         auto &cmp = params["comparison"];
         const uint16_t multiplier = 10;
-        const uint16_t paramReal = atoi(params["threshold"].c_str()) * multiplier; // Range 0-100
+        const float paramReal = atoi(params["threshold"].c_str()) * multiplier; // Range 0-100 TODO: Sanitize the input
         uint32_t pads = 0;
-        uint8_t trig_section = 0;
+        float trig_section = 0;
         float water_level;
 
-        getHigh12Values();
-        getLow8Values();
+        getHigh12Values(); // Top 12 pads
+        getLow8Values();  // Bottom 8 pads
         printValues();
 
         // Check low pads
@@ -54,17 +55,19 @@ public:
         if (water_level > 0) {
             printf("Water level: %.2f cm\n\n", (water_level / 10));
         }
-        return cmp == ">" ? water_level >= paramReal : water_level < paramReal;
+        return cmp == ">" ? water_level > paramReal : water_level < paramReal;
     }
 
     void setParamFormat(ParameterList &params) override {
+        // TODO: Show numbers when sliding the threshold value
+
         params["threshold"].type = "number";
         params["threshold"].description = "Threshold [cm]";
 
         params["comparison"].strictHints = true;
         params["comparison"].description = "Water level";
-        params["comparison"].addHint(">", "Above the threshold");
-        params["comparison"].addHint("<", "Below the threshold");
+        params["comparison"].addHint(">", "Above threshold");
+        params["comparison"].addHint("<", "Below threshold");
     }
 
     Status validateParams(Params &params) override {
@@ -79,13 +82,6 @@ private:
     unsigned char high_values[12] = {0};
     unsigned char low_values[8] = {0};
     int threshold = 100;
-
-    static void blink() {
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
-        sleep_ms(50);
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
-        sleep_ms(50);
-    }
 
     /* Measure values from the upper 12 pads */
     void getHigh12Values() {
@@ -124,5 +120,5 @@ private:
 
 int main() {
     NodeWater node;
-    node.run();
+    node.run(); // TODO: Make this interrupt driven and maximize low power sleep time
 }
