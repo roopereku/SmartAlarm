@@ -29,41 +29,45 @@ last_read = None
 device = None
 
 async def echo(websocket):
+    global device
     async for message in websocket:
         cmd = message.split("\n")
         print(cmd)
 
-        if(cmd[0] == "read"):
-            print("Reading")
+        try:
+            if(cmd[0] == "read"):
+                print("Reading")
+                device = serial.Serial(device_id, 9600)    #Open port with baud rate
 
-            device.write(b"\n")
-            time.sleep(0.01)
-            data = read_serial()
-            print(data)
+                device.write(b"\n")
+                time.sleep(0.01)
+                data = read_serial()
+                print(data)
 
-            config = data.decode("utf-8")
-            print(config)
+                config = data.decode("utf-8")
+                print(config)
 
-            await websocket.send(config)
+                await websocket.send(config)
 
-        elif(cmd[0] == "write"):
-            message = cmd[1][:-1].split("\r")
-            print(message)
+            elif(cmd[0] == "write"):
+                message = cmd[1][:-1].split("\r")
+                print(message)
 
-            # FIXME Remove quotation marks from the payload because python doesn't like them
-            payload = ("\b" + cmd[1][:-1] + "\b").encode("utf-8")
-            print("write", payload)
-            device.write(payload)
+                # FIXME Remove quotation marks from the payload because python doesn't like them
+                payload = ("\b" + cmd[1][:-1] + "\b").encode("utf-8")
+                print("write", payload)
+                device.write(payload)
 
-            await websocket.close()
+                await websocket.close()
 
-        elif(cmd[0] == "cancel"):
-            await websocket.close()
+            elif(cmd[0] == "cancel"):
+                await websocket.close()
+
+        except:
+            await websocket.send("nodevice")
+            device = None
 
 async def start_server():
-    global device
-    device = serial.Serial(device_id, 9600)    #Open port with baud rate
-
     print("Start. Dev id", device_id)
 
     async with websockets.serve(echo, "0.0.0.0", 8765):

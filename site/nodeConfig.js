@@ -6,6 +6,17 @@ function openConfigWindow() {
         configSocket.send("read")
 
 		configSocket.addEventListener('message', (data) => {
+			if(data.data === "nodevice")
+			{
+				Swal.fire(
+				  'No device connected!',
+				  'Make sure that your external node is connected via USB',
+				  'error'
+				)
+
+				return
+			}
+
 			console.log(data)
 			let config = data.data.split("\r")
 
