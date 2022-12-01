@@ -598,12 +598,15 @@ app.listen(port, () => {
 	loadSession()
 
 	server.listen(4242, () => {
-		startBuiltinNode("NodeTest", "test1");
-		//startBuiltinNode("NodeTime", "time1");
-		startBuiltinNode("NodeDay", "day1");
-		//startBuiltinNode("NodeLoop", "loop1");
-		//startBuiltinNode("NodeSleep", "sleep1");
-		//startBuiltinNode("NodeCounter", "counter1");
-		//startBuiltinNode("NodeProgram", "program1");
+		startBuiltinNode("NodeTest", "test node");
+		startBuiltinNode("NodeTime", "Time");
+		startBuiltinNode("NodeDay", "Day");
+		startBuiltinNode("NodeLoop", "Loop");
+		startBuiltinNode("NodeSleep", "Delay");
+		startBuiltinNode("NodeCounter", "Pass Counter");
+		startBuiltinNode("NodeProgram", "Program");
+		startBuiltinNode("NodeDiscord", "Discord");
+		startBuiltinNode("NodeTelegram", "Telegram");
+		startBuiltinNode("NodeEmail", "E-Mail");
 	})
 })
