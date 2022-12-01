@@ -22,4 +22,4 @@ class node_test(node_base):
             }
         }
 
-node = node_test("program", 0.5, "action")
+node = node_test("program", 0.5, "action", "fa-brands fa-uncharted")

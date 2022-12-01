@@ -18,7 +18,6 @@ class node_telegram(node_base):
     def activate(self, params):
         send_to_telegram(params["message"])
 
-
     def deactivate(self, params):
         pass
 
@@ -34,4 +33,4 @@ class node_telegram(node_base):
         }
 load_dotenv()
 apiToken = os.getenv('TELEGRAM_TOKEN')
-node = node_telegram("telegram", 0.5, "action")
+node = node_telegram("telegram", 0.5, "action", "fa-brands fa-telegram")

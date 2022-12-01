@@ -45,4 +45,4 @@ class node_loop(node_base):
             },
         }
 
-node = node_loop("loop", 0, "control")
+node = node_loop("loop", 0, "control", "fa-solid fa-arrow-rotate-left")

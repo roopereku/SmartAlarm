@@ -27,7 +27,7 @@ class node_discord(node_base):
         }
 
 def run_node():
-    node = node_discord("discord", 0.5, "action")
+    node = node_discord("discord", 0.5, "action", "fa-brands fa-discord")
 
 class message_watcher(commands.Cog):
     def __init__(self, client):

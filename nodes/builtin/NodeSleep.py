@@ -39,4 +39,4 @@ class node_sleep(node_base):
             }
         }
 
-node = node_sleep("sleep", 0, "control")
+node = node_sleep("sleep", 0, "control", "fa-regular fa-hourglass-half")

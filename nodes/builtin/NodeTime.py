@@ -49,4 +49,4 @@ class node_time(node_base):
             }
         }
 
-node = node_time("time", 1, "sensor")
+node = node_time("time", 1, "sensor", "fa-regular fa-clock")

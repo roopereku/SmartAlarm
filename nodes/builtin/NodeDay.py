@@ -41,4 +41,4 @@ class node_day(node_base):
             }
         }
 
-node = node_day("day", 1, "sensor")
+node = node_day("day", 1, "sensor", "fa-regular fa-calendar")
