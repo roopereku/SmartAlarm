@@ -145,6 +145,7 @@ const server = net.createServer((client) => {
 	console.log("Connection from ", client.remoteAddress)
 
     client.setKeepAlive(true, 1000);
+	let lastMessage = ""
 
 	client.on("error", (e) => {
 		let node = activeNodes.find((n) => client === n.connection)
@@ -164,13 +165,36 @@ const server = net.createServer((client) => {
 	})
 
 	client.on("data", (data) => {
+		let stringified = data.toString()
+		console.log(stringified)
+
+		//	Was there an unfinished JSON in the last message?
+		if(lastMessage.length > 0)
+		{
+			stringified = lastMessage + stringified
+			console.log("Message is now", stringified)
+			lastMessage = ""
+		}
+
 		/*	When using plain TCP, it's possible that separate messages
 		 *	are found in the same packet. To prevent this split the data
 		 *	with newlines because that shouldn't be in a JSON */
-		const jsons = data.toString().trim().split("\n")
+		const jsons = stringified.trim().split("\n")
+
 		jsons.forEach((json) => {
-			const msg = JSON.parse(json)
-			console.log(msg)
+			let msg = {}
+
+			try {
+				msg = JSON.parse(json)
+				console.log(msg)
+			}
+
+			//	This JSON was missing some information so save it temporarily
+			catch(e) {
+				console.log("Message ended unexpectedly")
+				lastMessage = json
+				return
+			}
 
 			/*	If a message contains the ID, it should be the first
 			 *	message that a node sends. The first message contains all
@@ -605,8 +629,8 @@ app.listen(port, () => {
 		startBuiltinNode("NodeSleep", "Delay");
 		startBuiltinNode("NodeCounter", "Pass Counter");
 		startBuiltinNode("NodeProgram", "Program");
-		startBuiltinNode("NodeDiscord", "Discord");
-		startBuiltinNode("NodeTelegram", "Telegram");
-		startBuiltinNode("NodeEmail", "E-Mail");
+		//startBuiltinNode("NodeDiscord", "Discord");
+		//startBuiltinNode("NodeTelegram", "Telegram");
+		//startBuiltinNode("NodeEmail", "E-Mail");
 	})
 })
