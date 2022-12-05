@@ -9,7 +9,9 @@ class NodePersist(node_base):
     """
 
     def control_setup(self, params):
-        self.control_reset_on_deactivate(False)  # Don't set this node to false if master node goes to deactivate state
+        # Don't set this node to false if master node goes to deactivate state
+        self.set_check_deactivated_control(True)
+        self.control_reset_on_deactivate(False)
 
     def check(self, params):
         """
@@ -17,15 +19,18 @@ class NodePersist(node_base):
         """
 
         now = time.time()
+        print(now)
 
         if now >= params["start"] + int(params["value"]) * int(params["unit"]):
             self.control_finish()
+            print("aika loppu")
             return False
 
         return True
 
     def activate(self, params):
         params["start"] = time.time()
+        print("Aktivoitu")
 
     def validate_params(self, params):
         pass
