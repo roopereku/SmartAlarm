@@ -244,13 +244,18 @@ const server = net.createServer((client) => {
 			}
 
 			//	Is result present
-			if(msg.result !== undefined)
-			{
+			if(msg.result !== undefined) {
 				//	Find the node that this message is from and see if it passef
 				let node = activeNodes.find((n) => client === n.connection)
 				findInstance(node, msg.instance).passed = msg.result
 
 				trigger(findInstance(node, msg.instance))
+			}
+
+			if(msg.ignoreDependencies !== undefined) {
+				let node = activeNodes.find((n) => client === n.connection)
+				node.ignoreDependencies = msg.ignoreDependencies
+				console.log(node.ID, "Ignore dependencies", node.ignoreDependencies)
 			}
 		})
 	})
@@ -518,7 +523,9 @@ function dependenciesPassed(instance) {
 }
 
 function hasPassed(instance) {
-	let passed = dependenciesPassed(instance)
+	let ignoreDependencies = instance.parent.ignoreDependencies === true
+	let passed = ignoreDependencies || dependenciesPassed(instance)
+
 	let thisPassed = instance.passed
 	let dependecyPassed = instance.dependencies.length == 0 ? true : passed > 0
 

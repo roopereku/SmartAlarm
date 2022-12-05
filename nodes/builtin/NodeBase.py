@@ -260,6 +260,20 @@ class node_base:
     def control_reset_on_deactivate(self, value):
         self.reset_control = value
 
+    def set_check_deactivated_control(self, value):
+        if not hasattr(node_base, '__check_deactivated_control'):
+            self.__check_deactivated_control = False
+
+        if(self.__check_deactivated_control is not value):
+
+            print("Tell the server ignore", value)
+            self.__check_deactivated_control = value
+
+            self.__respond({
+                "ignoreDependencies": value
+            })
+
+
     def check(self, params):
         raise NotImplementedError()
 
