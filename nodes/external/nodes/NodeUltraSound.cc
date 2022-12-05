@@ -3,12 +3,12 @@
 #include "hardware/gpio.h"
 #include "pico/time.h"
 
-#include "NodeBase.hh"
+#include "NodeManager.hh"
 
 class NodeUltraSound : public NodeBase
 {
 public:
-	NodeUltraSound() : NodeBase("ultrasound", NodeContext::Sensor, 100)
+	NodeUltraSound() : NodeBase("ultrasound", NodeContext::Sensor)
 	{
 		gpio_init(2);
 		gpio_set_dir(2, GPIO_OUT);
@@ -72,6 +72,6 @@ public:
 
 int main()
 {
-	NodeUltraSound node;
-	node.run();
+	Nodes::add <NodeUltraSound> ();
+	Nodes::run();
 }

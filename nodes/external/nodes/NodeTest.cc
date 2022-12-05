@@ -1,9 +1,9 @@
-#include "NodeBase.hh"
+#include "NodeManager.hh"
 
 class NodeTest : public NodeBase
 {
 public:
-	NodeTest() : NodeBase("blink", NodeContext::Action, 0)
+	NodeTest() : NodeBase("blink", NodeContext::Action)
 	{
 		for(int i = 2; i <= 4; i++)
 		{
@@ -42,6 +42,6 @@ public:
 
 int main()
 {
-	NodeTest node;
-	node.run();
+	Nodes::add <NodeTest> ();
+	Nodes::run();
 }
