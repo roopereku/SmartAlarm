@@ -13,30 +13,34 @@ class NodeEmail(node_base):
     Node that can send emails
     """
 
-    def __init__(self, node_type, delay, context):
-        super().__init__(node_type, delay, context)
-
-        self.__port = 465  # For SSL
-        self.__smtp_server = "smtp.gmail.com"
-        self.__sender_email = "smarttiaalarmia@gmail.com"  # Enter your address
-        load_dotenv()
-        self.__password = os.getenv('EMAIL_PASSWORD')
+    def check(self, params):
+        pass
 
     def activate(self, params):
         """
         Sends an email when activated
         """
 
+        port = 465  # For SSL
+        smtp_server = "smtp.gmail.com"
+        sender_email = "smarttiaalarmia@gmail.com"
+        # Password is read from .env file
+        load_dotenv()
+        password = os.getenv('EMAIL_PASSWORD')
+
         msg = EmailMessage()
         msg.set_content(params["body"])
         msg['Subject'] = params["header"]
-        msg['From'] = self.__sender_email
+        msg['From'] = sender_email
         msg['To'] = params["receiver"]
 
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(self.__smtp_server, self.__port, context=context) as server:
-            server.login(self.__sender_email, self.__password)
-            server.send_message(msg, from_addr=self.__sender_email, to_addrs=params["receiver"])
+        with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+            server.login(sender_email, password)
+            server.send_message(msg, from_addr=sender_email, to_addrs=params["receiver"])
+
+    def deactivate(self, params):
+        pass
 
     def validate_params(self, params):
         pass
@@ -44,18 +48,18 @@ class NodeEmail(node_base):
     def get_params_format(self):
         return {
             "receiver": {
-                "description": "Who to send the email to",
+                "description": "Receiver email address",
                 "type": "text"
             },
             "header": {
-                "description": "Header of the email",
+                "description": "Subject of the email",
                 "type": "text"
             },
             "body": {
-                "description": "What message to send",
+                "description": "Body of the email",
                 "type": "text"
             }
         }
 
 
-node = NodeEmail("email", 1, "action")
+node = NodeEmail("email", 1, "action", "fa-regular fa-envelope")
