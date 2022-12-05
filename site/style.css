@@ -19,3 +19,9 @@
 .grayout {
 	opacity: 0.5;
 }
+
+.node-type {
+	float: right;
+	margin-right: 10px;
+	color: gray;
+}

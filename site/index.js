@@ -113,7 +113,7 @@ function updateParameters(e) {
 	}
 }
 
-function addNodeListing(type, name, context, icon) {
+function addNodeListing(type, name, context, icon, showType) {
 	let listings = document.getElementById("listings")
 	let entry = document.createElement("div")
 
@@ -126,12 +126,20 @@ function addNodeListing(type, name, context, icon) {
 	let iconElement = document.createElement("i")
 	iconElement.className = icon
 
+	let typeText = document.createElement("span")
 	let text = document.createElement("span")
 	text.innerHTML = name
+
+	if(showType) {
+		typeText.innerHTML = type
+		typeText.className = "node-type"
+	}
+
 	text.style.margin = "10px"
 
 	entry.appendChild(iconElement)
 	entry.appendChild(text)
+	entry.appendChild(typeText)
 
 	listings.appendChild(entry)
 }
