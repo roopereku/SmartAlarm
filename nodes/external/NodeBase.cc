@@ -2,18 +2,9 @@
 
 #include <cctype>
 
-NodeBase::NodeBase(const char* nodeType, NodeContext context, unsigned delay)
-	: type(nodeType), name(cfg.get("name").c_str()), ID(std::string(nodeType) + ":" + name), context(context), delay(delay)
+NodeBase::NodeBase(const char* nodeType, NodeContext context)
+	: type(nodeType), context(context), delay(delay)
 {
-    stdio_init_all();
-    cyw43_arch_init();
-
-	gpio_init(16);
-	gpio_set_dir(16, GPIO_OUT);
-
-	//	If the pico has USB power and the override is low, enter the config mode
-	bool usbPower = cyw43_arch_gpio_get(2) && !gpio_get(16);
-	if(usbPower) cfg.startReading();
 }
 
 void NodeBase::handleMessage(const std::string& message)
@@ -190,21 +181,9 @@ NodeBase::Instance& NodeBase::findInstance(size_t num)
 	return instances.front();
 }
 
-void NodeBase::run()
+void NodeBase::connect(Config& cfg)
 {
-	sleep_ms(3000);
-	printf("run\n");
-
-	cyw43_arch_enable_sta_mode();
-
-	printf("ssid: %s\n", cfg.get("ssid").c_str());
-	printf("ssidpass: %s\n", cfg.get("pass").c_str());
-	printf("ip: %s\n", cfg.get("ip").c_str());
-	printf("name: %s\n", cfg.get("name").c_str());
-
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
 	while(!tcp.connect(cfg));
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
 
 	tcp.onMessage = [this](const std::string& message)
 	{
@@ -217,44 +196,32 @@ void NodeBase::run()
 		}
 	};
 
+	name = cfg.get("name");
+	ID = type + ":" + name;
+
 	setParamFormat(paramFormat);
 	defaultReady = paramFormat.count() == 0;
-
-	//instances.push_back(Instance(defaultReady));
 	respondFormat();
+}
 
-	while(true)
+void NodeBase::update()
+{
+	if(context == NodeContext::Action)
+		return;
+
+	for(size_t i = 0; i < instances.size(); i++)
 	{
-		tcp.update();
-
-		if(context == NodeContext::Action)
+		if(instances[i].ready)
 		{
-			sleep_ms(1);
-			continue;
-		}
+			bool result = check(instances[i].params);
 
-		bool shouldSleep = false;
-
-		for(size_t i = 0; i < instances.size(); i++)
-		{
-			if(instances[i].ready)
+			if(result != instances[i].lastResult)
 			{
-				bool result = check(instances[i].params);
-
-				if(result != instances[i].lastResult)
-				{
-					std::string json = std::string("{\"result\": ") + (result ? "true" : "false") + ", \"instance\": " + std::to_string(instances[i].num) + "}";
-					respond(json);
-				}
-
-				instances[i].lastResult = result;
-				shouldSleep = true;
+				std::string json = std::string("{\"result\": ") + (result ? "true" : "false") + ", \"instance\": " + std::to_string(instances[i].num) + "}";
+				respond(json);
 			}
+
+			instances[i].lastResult = result;
 		}
-
-		if(shouldSleep)
-			sleep_ms(delay);
-
-		else sleep_ms(1);
 	}
 }

@@ -3,7 +3,6 @@
 #define TCP_PORT 4242
 
 TCPClient::TCPClient() {}
-void TCPClient::update() { cyw43_arch_poll(); }
 
 void TCPClient::sendMessage(const std::string& message)
 {
@@ -15,14 +14,6 @@ void TCPClient::sendMessage(const std::string& message)
 
 bool TCPClient::connect(Config& cfg)
 {
-	if(!isWifiConnected && cyw43_arch_wifi_connect_timeout_ms(cfg.get("ssid").c_str(), cfg.get("pass").c_str(), CYW43_AUTH_WPA2_AES_PSK, 30000))
-	{
-		printf("failed to connect.\n");
-		return false;
-	}
-
-	isWifiConnected = true;
-
 	ip_addr_t remote_addr;
 	ip4addr_aton(cfg.get("ip").c_str(), &remote_addr);
 
