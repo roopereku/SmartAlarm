@@ -12,6 +12,7 @@ const app = express()
 app.use(express.static(__dirname + "/../site/"))
 
 let nodeValues = {}
+let builtins = []
 let layout = {}
 
 let loginPasscode = "11dc1d3da523b078578806b4cf6ee2baad0cd9f26d6da62c3fe87c2520be7b1f"
@@ -272,13 +273,18 @@ function sendToAll(json) {
 }
 
 function informAboutNode(node, client) {
+	//	Type names are shown on the website if this node isn't builtin
+	const showType = builtins.find((b) => b === node.name) === undefined
+
 	const msg = {
 		cmd : "nodeadd",
 		name : node.name,
 		type : node.type,
 		format : node.paramFormat,
 		context : node.context,
-		icon : node.icon
+		icon : node.icon,
+		builtin : node.builtin,
+		showType: showType
 	}
 
 	//	Send the listing if there's a connection
@@ -611,6 +617,7 @@ function startBuiltinNode(scriptName, name) {
     const nodePath = builtinRoot + scriptName + ".py"
     console.log(nodePath + " " + name)
 
+	builtins.push(name)
     spawn("python3", [ nodePath, name ])
 }
 
