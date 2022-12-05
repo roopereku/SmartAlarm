@@ -1,4 +1,4 @@
-#include "NodeBase.hh"
+#include "NodeManager.hh"
 
 #include <pico/stdlib.h>
 #include <hardware/gpio.h>
@@ -7,7 +7,7 @@
 class NodeLight : public NodeBase
 {
 public:
-	NodeLight() : NodeBase("light", NodeContext::Sensor, 100)
+	NodeLight() : NodeBase("light", NodeContext::Sensor)
 	{
 		adc_init();
 		adc_gpio_init(28);
@@ -46,6 +46,6 @@ public:
 
 int main()
 {
-	NodeLight node;
-	node.run();
+	Nodes::add <NodeLight> ();
+	Nodes::run();
 }

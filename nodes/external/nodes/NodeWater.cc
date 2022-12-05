@@ -2,7 +2,7 @@
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "hardware/i2c.h"
-#include "NodeBase.hh"
+#include "NodeManager.hh"
 
 // TODO: If WaterNode is submerged while restart the water level will not be measured correctly
 
@@ -119,6 +119,6 @@ private:
 
 
 int main() {
-    NodeWater node;
-    node.run(); // TODO: Make this interrupt driven and maximize low power sleep time
+	Nodes::add <NodeWater> ();
+	Nodes::run();
 }

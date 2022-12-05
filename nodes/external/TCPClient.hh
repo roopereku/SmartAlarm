@@ -15,8 +15,6 @@ class TCPClient
 {
 public:
 	TCPClient();
-
-	void update();
 	bool connect(Config& cfg);
 
 	void sendMessage(const std::string& message);
@@ -31,9 +29,7 @@ public:
 private:
     tcp_pcb *pcb = nullptr;
 
-    bool isWifiConnected = false;
     bool isServerConnected = false;
-
 	std::string message;
 };
 
