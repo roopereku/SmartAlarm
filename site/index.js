@@ -431,6 +431,8 @@ function closemodal(e) {
 }
 
 function changeModule(event) {
+	requestLayout()
+
   var all = document.querySelectorAll(".menu ul li");
 	for (var i = 0; i < all.length; i++) {
 	  all[i].classList.remove('selected');

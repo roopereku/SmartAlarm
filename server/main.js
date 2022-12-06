@@ -379,6 +379,10 @@ ws.on("connection", (c) => {
 				layout = msg.arg[0]
 			}
 
+			else if(msg.cmd == "getlayout") {
+				sendLayout(c)
+			}
+
 			else if(msg.cmd === "instance") {
 				const ID = msg.arg[0]
 				node = activeNodes.find((n) => ID === n.ID);

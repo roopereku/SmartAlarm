@@ -69,6 +69,13 @@ function handleLogin(passcode) {
 	})
 }
 
+function requestLayout() {
+	sendMessage({
+		cmd : "getlayout",
+		arg : []
+	})
+}
+
 function sendLayout(layoutJSON) {
 	console.log(layoutJSON)
 	sendMessage({
