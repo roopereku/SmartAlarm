@@ -86,60 +86,54 @@ function loadSession() {
 		fs.writeFileSync("session/layout.json", "{}")
 	}
 
-	fs.readFile("session/layout.json", 'utf8', (err, data) => {
-		if(err) {
-			console.error(err);
-			return;
-		}
+	let data = fs.readFileSync("session/layout.json")
+	layout = JSON.parse(data)
 
-		layout = JSON.parse(data)
-	});
+	data = fs.readFileSync("session/layout.json")
+	layout = JSON.parse(data)
 
-	fs.readFile("session/instances.json", 'utf8', (err, data) => {
-		if(err) {
-			console.error(err);
-			return;
-		}
+	data = fs.readFileSync("session/instances.json")
 
-		let instanceData = JSON.parse(data)
-		for (const [key, value] of Object.entries(instanceData)) {
-			//	There should be no nodes at this point
-			let name = key.split(":")[1]
-			let node = { ID: key, name: name, instances: [] }
-			nodeValues[key] = {}
+	let instanceData = JSON.parse(data)
+	for (const [key, value] of Object.entries(instanceData)) {
+		//	There should be no nodes at this point
+		let name = key.split(":")[1]
+		let node = { ID: key, name: name, instances: [] }
+		nodeValues[key] = {}
 
-			value.forEach((i) => {
-				node.instances.push({
-					num: i.num,
-					parent: node,
-					dependencies: []
-				})
-				
-				nodeValues[key][i.num] = i.params
+		value.forEach((i) => {
+			node.instances.push({
+				num: i.num,
+				parent: node,
+				dependencies: []
 			})
-
-			activeNodes.push(node)
-		}
-
-		activeNodes.forEach((n) => {
-			for(let i = 0; i < n.instances.length; i++) {
-				//	Look for each dependency of this instance
-				instanceData[n.ID][i].dependencies.forEach((d) => {
-					//	Loop through each node again so that we can find the dependency
-					activeNodes.forEach((n2) => {
-						//	Does any ID of the instances match the dependency
-						let dep = n2.instances.find((inst) => inst.num == d)
-
-						//	We have a match!
-						if(dep !== undefined)
-							n.instances[i].dependencies.push(dep)
-					})
-				})
-			}
+			
+			nodeValues[key][i.num] = i.params
 		})
 
-		console.log(activeNodes)
-	});
+		console.log("Loaded node", node)
+		activeNodes.push(node)
+	}
+
+	activeNodes.forEach((n) => {
+		for(let i = 0; i < n.instances.length; i++) {
+			//	Look for each dependency of this instance
+			instanceData[n.ID][i].dependencies.forEach((d) => {
+				//	Loop through each node again so that we can find the dependency
+				activeNodes.forEach((n2) => {
+					//	Does any ID of the instances match the dependency
+					let dep = n2.instances.find((inst) => inst.num == d)
+
+					//	We have a match!
+					if(dep !== undefined)
+						n.instances[i].dependencies.push(dep)
+				})
+			})
+		}
+	})
+
+	console.log(activeNodes)
+	//});
 }
 
 const server = net.createServer((client) => {
@@ -336,7 +330,7 @@ function sendLayout(c) {
 		n.instances.forEach((i) => {
 			c.send(JSON.stringify({
 				cmd: "passed",
-				arg: [ i.parent.ID, i.num, i.passed ]
+				arg: [ i.parent.ID, i.num, hasPassed(i)]
 			}))
 		})
 	})
@@ -638,6 +632,9 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
 	loadSession()
+
+	console.log("Nodes before starting builtins")
+	activeNodes.forEach((n) => console.log("Node", n))
 
 	server.listen(4242, () => {
 		startBuiltinNode("NodeTest", "test node");
