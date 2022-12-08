@@ -23,6 +23,8 @@ class node_base:
         self.context = context
         self.delay = delay
 
+        self.__check_deactivated_control = False
+
         # If the node takes no parameters, it's ready by default
         self.defaultReady = len(self.get_params_format()) == 0
         self.instances = []
@@ -269,9 +271,6 @@ class node_base:
         self.reset_control = value
 
     def set_check_deactivated_control(self, value):
-        if not hasattr(node_base, '__check_deactivated_control'):
-            self.__check_deactivated_control = False
-
         if (self.__check_deactivated_control is not value):
             print("Tell the server ignore", value)
             self.__check_deactivated_control = value
