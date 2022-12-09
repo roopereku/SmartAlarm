@@ -19,6 +19,8 @@ public:
 
         // Make the I2C pins available to picotool
         // bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C))
+
+        icon = "fa-solid fa-faucet-drip";
     }
 
     bool check(Params &params) override {
@@ -119,6 +121,6 @@ private:
 
 
 int main() {
-	Nodes::add <NodeWater> ();
-	Nodes::run();
+    Nodes::add<NodeWater>();
+    Nodes::run();
 }
