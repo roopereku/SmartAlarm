@@ -153,12 +153,12 @@ const server = net.createServer((client) => {
 
     client.on("data", (data) => {
         let stringified = data.toString()
-        console.log(stringified)
+        //console.log(stringified)
 
         //	Was there an unfinished JSON in the last message?
         if (lastMessage.length > 0) {
             stringified = lastMessage + stringified
-            console.log("Message is now", stringified)
+            //console.log("Message is now", stringified)
             lastMessage = ""
         }
 
@@ -172,7 +172,7 @@ const server = net.createServer((client) => {
 
             try {
                 msg = JSON.parse(json)
-                console.log(msg)
+                //console.log(msg)
             }
 
                 //	This JSON was missing some information so save it temporarily
@@ -186,12 +186,21 @@ const server = net.createServer((client) => {
              *	message that a node sends. The first message contains all
              *	sorts of relevant information so let's save it */
             if (msg.id !== undefined) {
+				console.log(activeNodes)
                 let node = activeNodes.find((n) => msg.id === n.ID)
+
+				//	If a node that has already connected is trying to connect, ignore it
+				if(node !== undefined && node.connection !== undefined) {
+					console.log("Prevent duplicate connection for", node.ID)
+					client.resetAndDestroy()
+					return
+				}
+
                 const reconnect = node !== undefined
                 const afterReboot = reconnect && node.context === undefined
 
                 if (!reconnect) {
-                    console.log("new node")
+                    console.log("new node", msg.id)
                     node = {};
 
                     node.instances = [];
