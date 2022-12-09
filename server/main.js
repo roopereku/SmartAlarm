@@ -79,7 +79,7 @@ function loadSession() {
     }
 
     if (!fs.existsSync("session/layout.json")) {
-        fs.writeFileSync("session/layout.json", "{}")
+        fs.writeFileSync("session/layout.json", '{"drawflow": {"Home": {}}}')
     }
 
     let data = fs.readFileSync("session/layout.json")
@@ -175,7 +175,7 @@ const server = net.createServer((client) => {
                 //console.log(msg)
             }
 
-                //	This JSON was missing some information so save it temporarily
+			//	This JSON was missing some information so save it temporarily
             catch (e) {
                 console.log("Message ended unexpectedly")
                 lastMessage = json
