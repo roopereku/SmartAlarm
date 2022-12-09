@@ -10,10 +10,15 @@ ws.addEventListener('message', (event) => {
 
     if (msg.error) return;
 
-    if (msg.cmd === "getlayout") {
+    if(msg.cmd === "getlayout") {
         setLayout(msg.result[0])
-        setValues(msg.result[1])
-    } else if (msg.cmd === "nodeadd") {
+    }
+ 
+	else if(msg.cmd === "nodevalues") {
+        setValues(msg.result[0])
+	}
+
+	else if (msg.cmd === "nodeadd") {
         console.log("node type", msg.type)
         console.log("node name", msg.name)
         console.log("context", msg.context)
@@ -49,9 +54,9 @@ function handleLogin(passcode) {
     })
 }
 
-function requestLayout() {
+function requestInstanceData() {
     sendMessage({
-        cmd: "getlayout", arg: []
+        cmd: "getinstancedata", arg: []
     })
 }
 

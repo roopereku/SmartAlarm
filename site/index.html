@@ -34,15 +34,13 @@
     </div>
     <div class="col-right">
       <div class="menu">
-        <ul>
-          <li onclick="changeModulePage('Home'); changeModule(event);" class="selected">Home</li>
-          <li onclick="changeModulePage('test'); changeModule(event);">Other Module</li>
+        <ul id="tabs">
         </ul>
       </div>
       <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)">
 
+        <div class="btn-newtab" onclick=addTab()>Add tab</div>
         <div class="btn-logout" onclick=logout()>Logout</div>
-
         <div class="btn-config" onclick=openConfigWindow()>Config</div>
 
         <div class="btn-lock">

@@ -79,7 +79,7 @@ function loadSession() {
     }
 
     if (!fs.existsSync("session/layout.json")) {
-        fs.writeFileSync("session/layout.json", '{"drawflow": {"Home": {}}}')
+        fs.writeFileSync("session/layout.json", '{"drawflow": {"Home": {"data": {}}}}')
     }
 
     let data = fs.readFileSync("session/layout.json")
@@ -307,12 +307,12 @@ function findInstance(node, num) {
     return undefined
 }
 
-function sendLayout(c) {
+function sendInstanceData(c) {
     c.send(JSON.stringify({
-        cmd: "getlayout", result: [layout, nodeValues]
+        cmd: "nodevalues", result: [nodeValues]
     }));
 
-    /*	FIXME
+	/*	FIXME
      *	All of this probably could be sent in a single message.
      *	It's easy to send a bunch of "passed" messages because the
      *	frontend already has a handler for it but it's very inefficient */
@@ -325,6 +325,12 @@ function sendLayout(c) {
             }))
         })
     })
+}
+
+function sendLayout(c) {
+    c.send(JSON.stringify({
+        cmd: "getlayout", result: [layout]
+    }));
 }
 
 ws.on("connection", (c) => {
@@ -349,6 +355,7 @@ ws.on("connection", (c) => {
 
                     //	Inform about the layout
                     sendLayout(c)
+					sendInstanceData(c)
                 }
 
                 return
@@ -359,8 +366,8 @@ ws.on("connection", (c) => {
 
             if (msg.cmd === "layout") {
                 layout = msg.arg[0]
-            } else if (msg.cmd === "getlayout") {
-                sendLayout(c)
+            } else if (msg.cmd === "getinstancedata") {
+                sendInstanceData(c)
             } else if (msg.cmd === "instance") {
                 const ID = msg.arg[0]
                 node = activeNodes.find((n) => ID === n.ID);

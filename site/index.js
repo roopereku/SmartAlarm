@@ -6,12 +6,27 @@ editor.reroute_fix_curvature = true;
 editor.force_first_input = false;
 editor.draggable_inputs = false;
 
-editor.addModule('test')
-
 let nodeFormats = {}
 
 function encrypt(pass) {
 	return CryptoJS.PBKDF2(pass, 'salt', { keySize: 512/64, iterations: 1000, hasher:CryptoJS.algo.SHA512 }).toString(CryptoJS.enc.Hex);
+}
+
+function addTab() {
+	Swal.fire({
+		title: "Enter the name of the tab",
+		input: "text",
+		showCancelButton: true
+	}).then((result) => {
+		const name = result.value.trim()
+		if(result.isConfirmed && name.length > 0) {
+			let tab = document.getElementById("tabs").appendChild(document.createElement("li"))
+			tab.innerHTML = name
+			tab.setAttribute("onclick", 'changeModulePage("' + name + '"); changeModule(event);')
+
+			editor.addModule(name)
+		}
+	})
 }
 
 function showLoginWindow() {
@@ -54,6 +69,13 @@ function changeModulePage(module) {
 function setLayout(layoutJSON) {
     if(Object.keys(layoutJSON).length === 0)
 		return
+
+	for(const [key, _] of Object.entries(layoutJSON.drawflow)) {
+		let tab = document.getElementById("tabs").appendChild(document.createElement("li"))
+		console.log("KEY is", key)
+		tab.innerHTML = key
+		tab.setAttribute("onclick", 'changeModulePage("' + key + '"); changeModule(event);')
+	}
 
 	editor.import(layoutJSON);
 }
@@ -256,7 +278,8 @@ editor.on('nodeSelected', function(id) {
 })
 
 editor.on('moduleCreated', function(name) {
-  console.log("Module Created " + name);
+	console.log("Module Created " + name);
+	sendLayout(editor.export())
 })
 
 editor.on('moduleChanged', function(name) {
@@ -305,11 +328,13 @@ editor.on('translate', function(position) {
 })
 
 editor.on('addReroute', function(id) {
-  console.log("Reroute added " + id);
+	console.log("Reroute added " + id);
+	sendLayout(editor.export())
 })
 
 editor.on('removeReroute', function(id) {
-  console.log("Reroute removed " + id);
+	console.log("Reroute removed " + id);
+	sendLayout(editor.export())
 })
 
 /* DRAG EVENT */
@@ -431,13 +456,13 @@ function closemodal(e) {
 }
 
 function changeModule(event) {
-	requestLayout()
+	requestInstanceData()
 
-  var all = document.querySelectorAll(".menu ul li");
-	for (var i = 0; i < all.length; i++) {
-	  all[i].classList.remove('selected');
-	}
-  event.target.classList.add('selected');
+	var all = document.querySelectorAll(".menu ul li");
+	for (var i = 0; i < all.length; i++)
+		all[i].classList.remove('selected');
+
+	event.target.classList.add('selected');
 }
 
 function changeMode(option) {

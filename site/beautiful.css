@@ -105,6 +105,21 @@ cursor: pointer;
   z-index: 5;
 }
 
+.btn-newtab {
+  float: right;
+  position: absolute;
+  top: 10px;
+  right: 170px;
+  color: white;
+  font-weight: bold;
+  border: 1px solid #51980f;
+  background: yellow;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 5;
+}
+
 .btn-config {
   float: right;
   position: absolute;
