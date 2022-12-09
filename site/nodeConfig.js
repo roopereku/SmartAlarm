@@ -56,11 +56,19 @@ function openConfigWindow() {
 		})
 	
 	}).catch(() => {
-		Swal.fire(
-		  'Unable to connect!',
-		  'Make sure that the python configuration server is running',
-		  'error'
-		)
+		Swal.fire({
+			title: 'Unable to connect!',
+			text: 'Make sure that the python configuration server is running',
+			icon: 'error',
+
+			showCancelButton: true,
+			confirmButtonText: "Download python script"
+
+		}).then((result) => {
+			if(result.isConfirmed) {
+				location.href += "configserver.py"
+			}
+		})
 	})
 }
 

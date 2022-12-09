@@ -3,6 +3,7 @@ const express = require('express')
 const crypto = require('crypto')
 const webSocket = require('ws')
 const http = require('http')
+const path = require('path')
 const net = require("net")
 const fs = require("fs")
 
@@ -595,8 +596,14 @@ function startBuiltinNode(scriptName, name) {
     spawn("python3", [nodePath, name])
 }
 
+app.get("/configserver.py", (req, res) => {
+	//res.sendFile(__dirname + "/../resources/picoconfig.py")
+	res.sendFile(path.resolve('../resources/picoconfig.py'));
+})
+
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + "/../site/index.html")
+    //res.sendFile(__dirname + "/../site/index.html")
+	res.sendFile(path.resolve('../site/index.html'));
 })
 
 app.listen(port, () => {
