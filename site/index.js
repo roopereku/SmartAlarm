@@ -72,7 +72,6 @@ function setLayout(layoutJSON) {
 
 	for(const [key, _] of Object.entries(layoutJSON.drawflow)) {
 		let tab = document.getElementById("tabs").appendChild(document.createElement("li"))
-		console.log("KEY is", key)
 		tab.innerHTML = key
 		tab.setAttribute("onclick", 'changeModulePage("' + key + '"); changeModule(event);')
 	}

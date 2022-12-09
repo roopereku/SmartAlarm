@@ -12,6 +12,8 @@ public:
 		adc_init();
 		adc_gpio_init(28);
 		adc_select_input(2);
+
+        icon = "fa-regular fa-lightbulb";
 	}
 
 	bool check(Params& params) override

@@ -61,6 +61,7 @@ class NodeGPIOIn : public NodeGPIO
 public:
 	NodeGPIOIn() : NodeGPIO("GPIO In", NodeContext::Sensor)
 	{
+        icon = "fa-solid fa-arrow-right-to-bracket";
 	}
 
     void setParamFormat(ParameterList& params) override
@@ -85,6 +86,7 @@ class NodeGPIOOut : public NodeGPIO
 public:
 	NodeGPIOOut() : NodeGPIO("GPIO Out", NodeContext::Action)
 	{
+        icon = "fa-solid fa-arrow-right-from-bracket";
 	}
 
     void setParamFormat(ParameterList& params) override

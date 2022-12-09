@@ -15,6 +15,8 @@ public:
 
 		gpio_init(3);
 		gpio_set_dir(3, GPIO_IN);
+
+        icon = "fa-solid fa-satellite-dish";
 	}
 
 	bool check(Params& params) override

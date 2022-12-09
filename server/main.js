@@ -17,7 +17,7 @@ let builtins = []
 let layout = {}
 
 let loginPasscode = "11dc1d3da523b078578806b4cf6ee2baad0cd9f26d6da62c3fe87c2520be7b1f"
-console.log(encrypt("admin")) // TODO: Don't store this to git
+
 function encrypt(pass) {
     return crypto.pbkdf2Sync(pass, 'salt', 1000, 512 / 16, 'sha512').toString('hex');
 }
