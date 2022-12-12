@@ -8,10 +8,10 @@
 
 class NodeWater : public NodeBase {
 public:
-    NodeWater() : NodeBase("water", NodeContext::Sensor, 100) {
+    NodeWater() : NodeBase("Water", NodeContext::Sensor) {
         // I2C init
         i2c_init(i2c_default, 100 * 1000);
-        // GPIO init
+        // GPIO init TODO: Selectable pin
         gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C); // GP4 pin
         gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C); // GP5 pin
         gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
