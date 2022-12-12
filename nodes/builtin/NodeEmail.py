@@ -14,6 +14,9 @@ class NodeEmail(node_base):
     """
 
     def check(self, params):
+        """
+        No need to check anything
+        """
         pass
 
     def activate(self, params):
@@ -40,12 +43,18 @@ class NodeEmail(node_base):
             server.send_message(msg, from_addr=sender_email, to_addrs=params["receiver"])
 
     def deactivate(self, params):
+        """
+        No need to deactivate
+        """
         pass
 
     def validate_params(self, params):
+        """
+        No need to validate
+        """
         pass
 
-    def get_params_format(self):
+    def get_params_format(self, params):
         return {
             "receiver": {
                 "description": "Receiver email address",
