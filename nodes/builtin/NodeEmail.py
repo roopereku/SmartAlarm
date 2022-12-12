@@ -45,7 +45,7 @@ class NodeEmail(node_base):
     def validate_params(self, params):
         pass
 
-    def get_params_format(self):
+    def get_params_format(self, params):
         return {
             "receiver": {
                 "description": "Receiver email address",

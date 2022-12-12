@@ -8,7 +8,7 @@ class NodePersist(node_base):
     After this node is activated by other node it will stay activated user specified time
     """
 
-    def control_setup(self, params):
+    def control_setup(self):
         # Don't set this node to false if master node goes to deactivate state
         self.set_check_deactivated_control(True)
         self.control_reset_on_deactivate(False)
@@ -30,12 +30,14 @@ class NodePersist(node_base):
 
     def activate(self, params):
         params["start"] = time.time()
-        print("Aktivoitu")
+
+    def deactivate(self, params):
+        pass
 
     def validate_params(self, params):
         pass
 
-    def get_params_format(self):
+    def get_params_format(self, params):
         return {
             "unit": {
                 "description": "Unit of the persistent activated state duration",
