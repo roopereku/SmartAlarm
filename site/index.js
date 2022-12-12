@@ -248,6 +248,43 @@ function enableNode(name) {
 	})
 }
 
+function darkMode() {
+	console.log("darkMode")
+	let root = document.querySelector(':root');
+	let button = document.getElementById("darkModeToggle")
+	button.onclick = lightMode
+	button.className = "btn-light"
+	button.innerText = "Light mode"
+
+	root.style.setProperty('--color', 'white')
+	root.style.setProperty('--background-color', '#2f2f2f')
+	root.style.setProperty('--background-color2', '#5d5d5d')
+}
+
+function lightMode() {
+	let root = document.querySelector(':root');
+	let button = document.getElementById("darkModeToggle")
+	button.onclick = darkMode
+	button.className = "btn-dark"
+	button.innerText = "Dark mode"
+
+	root.style.setProperty('--color', 'black')
+	root.style.setProperty('--background-color', '#ffffff')
+	root.style.setProperty('--background-color2', '#eeeeee')
+}
+
+function rgbToggle() {
+	let root = document.querySelector(':root');
+
+	setInterval(() => {
+		let randomColor = Math.floor(Math.random() * 16777215).toString(16)
+
+		root.style.setProperty('--color', 'white')
+		root.style.setProperty('--background-color2', '#5d5d5d')
+		root.style.setProperty('--background-color', '#' + randomColor)
+	}, 500)
+}
+
 editor.start();
 
 // Events!

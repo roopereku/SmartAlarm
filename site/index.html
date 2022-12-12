@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Drawflow</title>
+  <title>Smart Alarm</title>
 </head>
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -20,8 +20,10 @@
 
   <header>
     <h2>Smart Alarm</h2>
+    <div class="btn-dark" id="darkModeToggle" onclick="darkMode()">Dark mode</div>
+    <input type="button" id="rgbModeToggle" onclick="rgbToggle()">
     <div class="btn-save" onclick=save()>Save</div>
-    <div class="github-link"><a href="https://github.com/jerosoler/Drawflow" target="_blank"><i class="fab fa-github fa-3x"></i></a></div>
+    <div class="github-link"><a href="https://github.com/roopereku/SmartAlarm" target="_blank"><i class="fab fa-github fa-3x"></i></a></div>
   </header>
   <div class="wrapper">
     <div class="col" id="listings">
@@ -44,8 +46,8 @@
         <div class="btn-config" onclick=openConfigWindow()>Config</div>
 
         <div class="btn-lock">
-          <i id="lock" class="fas fa-lock" onclick="editor.editor_mode='fixed'; changeMode('lock');"></i>
-          <i id="unlock" class="fas fa-lock-open" onclick="editor.editor_mode='edit'; changeMode('unlock');" style="display:none;"></i>
+          <i id="lock" class="fas fa-lock-open" onclick="editor.editor_mode='fixed'; changeMode('lock');"></i>
+          <i id="unlock" class="fas fa-lock" onclick="editor.editor_mode='edit'; changeMode('unlock');" style="display:none;"></i>
         </div>
         <div class="bar-zoom">
           <i class="fas fa-search-minus" onclick="editor.zoom_out()"></i>
