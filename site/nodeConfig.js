@@ -1,6 +1,9 @@
 const serverURL = "ws://localhost:8765"
 
 function openConfigWindow() {
+	Swal.fire({
+		title: "Connecting..."
+	})
 	connectConfigServer().then((configSocket) => {
 		console.log("Called then")
         configSocket.send("read")
