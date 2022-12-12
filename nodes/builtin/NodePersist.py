@@ -37,7 +37,7 @@ class NodePersist(node_base):
     def validate_params(self, params):
         pass
 
-    def get_params_format(self, params):
+    def get_params_format(self):
         return {
             "unit": {
                 "description": "Unit of the persistent activated state duration",
