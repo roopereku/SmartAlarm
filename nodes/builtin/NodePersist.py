@@ -2,37 +2,26 @@ import time
 
 from NodeBase import node_base
 
-
+# After this node is activated by other node it will stay activated for a user specified time
 class NodePersist(node_base):
-    """
-    After this node is activated by other node it will stay activated user specified time
-    """
 
-    def control_setup(self):
-        # Don't set this node to false if master node goes to deactivate state
+    def control_setup(self, params):
+        # Ignore dependency nodes
         self.set_check_deactivated_control(True)
         self.control_reset_on_deactivate(False)
 
     def check(self, params):
-        """
-        Check if it is time to turn the node to deactivated state
-        """
-
         now = time.time()
-        print(now)
 
+        # If the given duration has elapsed, disable the control
         if now >= params["start"] + int(params["value"]) * int(params["unit"]):
             self.control_finish()
-            print("aika loppu")
             return False
 
         return True
 
     def activate(self, params):
         params["start"] = time.time()
-
-    def deactivate(self, params):
-        pass
 
     def validate_params(self, params):
         pass
