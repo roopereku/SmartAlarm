@@ -1,7 +1,6 @@
 import os
 import json
 import requests
-import response
 from NodeBase import node_base
 from dotenv import load_dotenv
 
@@ -13,7 +12,7 @@ def receive_telegram(message):
         response = requests.get(apiURL, json={'chat_id': chatID, 'text': message})
         print(response.text)
     except Exception as e:
-        print(e)'
+        print(e)
 
 
 def get_url(url):
@@ -43,7 +42,7 @@ class node_telegram_get(node_base):
         updates = get_updates()
         [text, char_id] = get_last_chat_id_and_text(updates)
 
-        if (text == "light"):
+        if (text == params["message"]):
             return True
 
     def activate(self, params):
@@ -54,7 +53,6 @@ class node_telegram_get(node_base):
 
     def validate_params(self, params):
         pass
-
     def get_params_format(self):
         return {
             "message" : {
@@ -63,13 +61,6 @@ class node_telegram_get(node_base):
                 "default" : "light"
             },
 
-            "comparison" : {
-                "description" : "How to compare",
-                "strict" : True,
-                "hint" : {
-                    "=" : "Equal"
-                }
-            }
         }
 
 load_dotenv()

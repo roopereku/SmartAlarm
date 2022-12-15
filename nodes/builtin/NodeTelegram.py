@@ -4,7 +4,6 @@ from NodeBase import node_base
 from dotenv import load_dotenv
 
 def send_to_telegram(message):
-
     chatID = '1999030716'
     apiURL = f'https://api.telegram.org/bot{apiToken}/sendMessage'
 
@@ -27,7 +26,7 @@ class node_telegram(node_base):
     def get_params_format(self):
         return {
             "message": {
-                "description" : "What message to send",
+                "description" : "What message to send ",
                 "type": "text"
             }
         }
