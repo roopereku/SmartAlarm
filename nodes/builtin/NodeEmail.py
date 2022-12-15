@@ -54,7 +54,7 @@ class NodeEmail(node_base):
         """
         pass
 
-    def get_params_format(self, params):
+    def get_params_format(self):
         return {
             "receiver": {
                 "description": "Receiver email address",
