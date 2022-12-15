@@ -291,5 +291,5 @@ class node_base:
     def validate_params(self, params):
         raise NotImplementedError()
 
-    def get_params_format(self, params):
+    def get_params_format(self):
         raise NotImplementedError()
