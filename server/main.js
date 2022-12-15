@@ -619,7 +619,10 @@ app.listen(port, () => {
         startBuiltinNode("NodeLoop", "Loop");
         startBuiltinNode("NodeSleep", "Delay");
         startBuiltinNode("NodeCounter", "Pass Counter");
-        startBuiltinNode("NodeProgram", "Program");
+        startBuiltinNode("NodeProgram", "Start a program");
+        startBuiltinNode("NodeToggle", "Toggle switch");
+        startBuiltinNode("NodePersist", "Persist");
+        startBuiltinNode("NodePersistUntil", "Persist until");
         //startBuiltinNode("NodeDiscord", "Discord");
         //startBuiltinNode("NodeTelegram", "Telegram");
         //startBuiltinNode("NodeEmail", "E-Mail");

@@ -17,7 +17,9 @@ class node_test(node_base):
                 "description" : "What program to start",
                 "strict": True,
                 "hint": {
-                    "glxgears" : "GLX Gears"
+                    "glxgears" : "GLX Gears",
+                    "calc" : "Calculator",
+                    "notepad" : "Notepad"
                 }
             }
         }

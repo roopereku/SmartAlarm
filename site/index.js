@@ -29,6 +29,15 @@ function addTab() {
 	})
 }
 
+function savePage() {
+	save()
+
+	Swal.fire({
+		title: "Changes have been saved!",
+		showCancelButton: false
+	})
+}
+
 function showLoginWindow() {
 	function getCookie(name) {
 		const value = `; ${document.cookie}`;
@@ -246,6 +255,96 @@ function enableNode(name) {
 			inputs[i].removeAttribute("disabled")
 		}
 	})
+}
+
+function darkModeButton() {
+	let root = document.querySelector(':root');
+	root.style.setProperty('--transition-delay', '0.5s')
+
+	darkMode()
+
+	setTimeout(() => {
+		root.style.setProperty('--transition-delay', '0s')
+	}, 500)
+}
+
+function lightModeButton() {
+	let root = document.querySelector(':root');
+	root.style.setProperty('--transition-delay', '0.5s')
+
+	lightMode()
+
+	setTimeout(() => {
+		root.style.setProperty('--transition-delay', '0s')
+	}, 500)
+}
+
+function darkMode() {
+	console.log("darkMode")
+	let root = document.querySelector(':root');
+	let button = document.getElementById("darkModeToggle")
+	button.onclick = lightModeButton
+	button.className = "btn-light"
+	button.innerText = "Light mode"
+
+	root.style.setProperty('--color', 'white')
+	root.style.setProperty('--background-color', '#2f2f2f')
+	root.style.setProperty('--background-color2', '#5d5d5d')
+	root.style.setProperty('--border-color2', '#4d4d4d')
+
+	setCookie("darkMode", "true")
+}
+
+function lightMode() {
+	let root = document.querySelector(':root');
+	let button = document.getElementById("darkModeToggle")
+	button.onclick = darkModeButton
+	button.className = "btn-dark"
+	button.innerText = "Dark mode"
+
+	root.style.setProperty('--color', 'black')
+	root.style.setProperty('--background-color', '#ffffff')
+	root.style.setProperty('--background-color2', '#eeeeee')
+	root.style.setProperty('--border-color2', '#eeeeee')
+
+	setCookie("darkMode", "false")
+}
+
+function rgbToggle() {
+	let root = document.querySelector(':root');
+	root.style.setProperty('--transition-delay', '0.5s')
+
+	setInterval(() => {
+		let randomColor = Math.floor(Math.random() * 16777215).toString(16)
+
+		root.style.setProperty('--color', 'white')
+		root.style.setProperty('--background-color2', '#5d5d5d')
+		root.style.setProperty('--background-color', '#' + randomColor)
+	}, 500)
+}
+
+function setCookie(name,value,days) {
+	let expires = "";
+	if (days) {
+		let date = new Date();
+		date.setTime(date.getTime() + (days*24*60*60*1000));
+		expires = "; expires=" + date.toUTCString();
+	}
+	document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+function getCookie(name) {
+	let nameEQ = name + "=";
+	let ca = document.cookie.split(';');
+	for(let i=0;i < ca.length;i++) {
+		let c = ca[i];
+		while (c.charAt(0)==' ') c = c.substring(1,c.length);
+		if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+	}
+	return null;
+}
+
+if (getCookie("darkMode") === "true") {
+	darkMode()
 }
 
 editor.start();

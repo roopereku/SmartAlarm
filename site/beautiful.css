@@ -1,8 +1,13 @@
 :root {
-  --border-color: #cacaca;
+  --border-color: #5d5d5d;
+  --border-color2: #eeeeee;
   --background-color: #ffffff;
+  --background-color2: #eeeeee;
+  --color: black;
 
   --background-box-title: #f7f7f7;
+
+  --transition-delay: 0s;
 }
 
 html, body {
@@ -12,6 +17,9 @@ html, body {
   height: 100vh;
   overflow: hidden;
   font-family: 'Roboto', sans-serif;
+  color: var(--color);
+  background-color: var(--background-color);
+  transition: background-color var(--transition-delay), color var(--transition-delay);
 }
 
 header {
@@ -68,8 +76,10 @@ header a {
   position: absolute;
   height: 40px;
   display: block;
-  background: white;
+  background: var(--background-color);
+  color: var(--color);
   width: 100%;
+  transition: background-color var(--transition-delay), color var(--transition-delay);
 }
 .menu ul {
   padding: 0px;
@@ -113,7 +123,7 @@ cursor: pointer;
   color: white;
   font-weight: bold;
   border: 1px solid #51980f;
-  background: yellow;
+  background: #eeee00;
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -148,6 +158,38 @@ cursor: pointer;
   border-radius: 4px;
   cursor: pointer;
   z-index: 5;
+}
+
+.btn-dark {
+  float: right;
+  position: absolute;
+  top: 17.5px;
+  right: 155px;
+  color: white;
+  font-weight: bold;
+  border: 1px solid #212121;
+  background: #383838;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 5;
+  transition: background-color var(--transition-delay), color var(--transition-delay);
+}
+
+.btn-light {
+  float: right;
+  position: absolute;
+  top: 17.5px;
+  right: 155px;
+  color: black;
+  font-weight: bold;
+  border: 1px solid #606060;
+  background: #eaeaea;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 5;
+  transition: background-color var(--transition-delay), color var(--transition-delay);
 }
 
 .btn-logout {
@@ -205,18 +247,20 @@ cursor: pointer;
 .bar-zoom svg:nth-child(1) {
   padding-left: 0px;
 }
-
 #drawflow {
   position: relative;
   width: calc(100vw - 301px);
-  height: calc(100% - 50px);
+  height: calc(100% - 42px);
   top: 40px;
   background: var(--background-color);
-  background-size: 25px 25px;
+  transition: background-color var(--transition-delay), color var(--transition-delay), opacity var(--transition-delay);
+  background-size: 25.5px 25.5px;
+  background-position: -1px 0px;
   background-image:
-   linear-gradient(to right, #f1f1f1 1px, transparent 1px),
-   linear-gradient(to bottom, #f1f1f1 1px, transparent 1px);
+          linear-gradient(to right, var(--border-color2) 1px, transparent 1px),
+          linear-gradient(to bottom, var(--border-color2) 1px, transparent 1px);
 }
+
 
 @media only screen and (max-width: 768px) {
   .col {
@@ -235,6 +279,7 @@ cursor: pointer;
 /* Editing Drawflow */
 
 .drawflow .drawflow-node {
+  transition: background-color var(--transition-delay), color var(--transition-delay);
   background: var(--background-color);
   border: 1px solid var(--border-color);
   -webkit-box-shadow: 0 2px 15px 2px var(--border-color);
@@ -244,7 +289,8 @@ cursor: pointer;
 }
 
 .drawflow .drawflow-node.selected  {
-  background: white;
+  transition: background-color var(--transition-delay), color var(--transition-delay);
+  background: var(--background-color);
   border: 1px solid #4ea9ff;
   -webkit-box-shadow: 0 2px 20px 2px #4ea9ff;
   box-shadow: 0 2px 20px 2px #4ea9ff;
@@ -309,7 +355,8 @@ cursor: pointer;
 .drawflow-node .box {
   padding: 10px 20px 20px 20px;
   font-size: 14px;
-  color: #555555;
+  color: var(--color);
+  transition: background-color var(--transition-delay), color var(--transition-delay);
 
 }
 .drawflow-node .box p {
@@ -332,7 +379,9 @@ cursor: pointer;
   line-height: 30px;
   font-size: 16px;
   width: 158px;
-  color: #555555;
+  color: var(--color);
+  background-color: var(--background-color2);
+  transition: background-color var(--transition-delay), color var(--transition-delay);
 }
 
 .drawflow-node textarea {
