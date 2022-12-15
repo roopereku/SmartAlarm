@@ -623,8 +623,8 @@ app.listen(port, () => {
         startBuiltinNode("NodeToggle", "Toggle switch");
         startBuiltinNode("NodePersist", "Persist");
         startBuiltinNode("NodePersistUntil", "Persist until");
-        //startBuiltinNode("NodeDiscord", "Discord");
-        //startBuiltinNode("NodeTelegram", "Telegram");
-        //startBuiltinNode("NodeEmail", "E-Mail");
+
+		//	NOTE Never enable Discord, Email or Telegram here because they require
+		//	API tokens which don't exist by default
     })
 })
