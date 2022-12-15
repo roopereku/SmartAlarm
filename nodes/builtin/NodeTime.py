@@ -12,7 +12,7 @@ class node_time(node_base):
 
         if(cmp == "<"):
             if(pt.tm_min > now.tm_min): return now.tm_hour <= pt.tm_hour
-            else: return now.tm_min < pt.tm_min
+            else: return pt.tm_min < now.tm_min
 
         elif(cmp == ">"): return now.tm_hour >= pt.tm_hour and now.tm_min > pt.tm_min
         elif(cmp == "="): return now.tm_min == pt.tm_min and now.tm_hour == pt.tm_hour
