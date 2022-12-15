@@ -7,59 +7,59 @@
   <title>Smart Alarm</title>
 </head>
 <body>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-  <script src="drawflow.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/js/all.min.js" crossorigin="anonymous"></script>
-  <link rel="stylesheet" type="text/css" href="style.css" />
-  <link rel="stylesheet" type="text/css" href="drawflow.css" />
-  <link rel="stylesheet" type="text/css" href="beautiful.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" crossorigin="anonymous" />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
-  <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script src="drawflow.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link rel="stylesheet" type="text/css" href="drawflow.css" />
+<link rel="stylesheet" type="text/css" href="beautiful.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+<script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
 
-  <header>
-    <h2>Smart Alarm</h2>
-    <div class="btn-dark" id="darkModeToggle" onclick="darkModeButton()">Dark mode</div>
-    <input type="button" id="rgbModeToggle" onclick="rgbToggle()">
-    <div class="btn-save" onclick=savePage()>Save</div>
-    <div class="github-link"><a href="https://github.com/roopereku/SmartAlarm" target="_blank"><i class="fab fa-github fa-3x"></i></a></div>
-  </header>
-  <div class="wrapper">
-    <div class="col" id="listings">
-      <select class="node-menu" onchange="showNodesWithContext(this.value)" size="1">
-        <option class="node-context" id="context-all" value="all">All nodes</option>
-        <option class="node-context" id="context-sensor" value="sensor">Sensor</option>
-        <option class="node-context" id="context-control" value="control">Control</option>
-        <option class="node-context" id="context-action" value="action">Action</option>
-      </select>
+<header>
+  <h2>Smart Alarm</h2>
+  <div class="btn-dark" id="darkModeToggle" onclick="darkModeButton()">Dark mode</div>
+  <input type="button" id="rgbModeToggle" onclick="rgbToggle()">
+  <div class="btn-logout" onclick=logout()>Logout</div>
+  <div class="github-link"><a href="https://github.com/roopereku/SmartAlarm" target="_blank"><i class="fab fa-github fa-3x"></i></a></div>
+</header>
+<div class="wrapper">
+  <div class="col" id="listings">
+    <select class="node-menu" onchange="showNodesWithContext(this.value)" size="1">
+      <option class="node-context" id="context-all" value="all">All nodes</option>
+      <option class="node-context" id="context-sensor" value="sensor">Sensor</option>
+      <option class="node-context" id="context-control" value="control">Control</option>
+      <option class="node-context" id="context-action" value="action">Action</option>
+    </select>
+  </div>
+  <div class="col-right">
+    <div class="menu">
+      <ul id="tabs">
+      </ul>
     </div>
-    <div class="col-right">
-      <div class="menu">
-        <ul id="tabs">
-        </ul>
+    <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)">
+
+      <div class="btn-newtab" onclick=addTab()>Add tab</div>
+      <div class="btn-save" onclick=savePage()>Save</div>
+      <div class="btn-config" onclick=openConfigWindow()>Config</div>
+
+      <div class="btn-lock">
+        <i id="lock" class="fas fa-lock-open" onclick="editor.editor_mode='fixed'; changeMode('lock');"></i>
+        <i id="unlock" class="fas fa-lock" onclick="editor.editor_mode='edit'; changeMode('unlock');" style="display:none;"></i>
       </div>
-      <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)">
-
-        <div class="btn-newtab" onclick=addTab()>Add tab</div>
-        <div class="btn-logout" onclick=logout()>Logout</div>
-        <div class="btn-config" onclick=openConfigWindow()>Config</div>
-
-        <div class="btn-lock">
-          <i id="lock" class="fas fa-lock-open" onclick="editor.editor_mode='fixed'; changeMode('lock');"></i>
-          <i id="unlock" class="fas fa-lock" onclick="editor.editor_mode='edit'; changeMode('unlock');" style="display:none;"></i>
-        </div>
-        <div class="bar-zoom">
-          <i class="fas fa-search-minus" onclick="editor.zoom_out()"></i>
-          <i class="fas fa-search" onclick="editor.zoom_reset()"></i>
-          <i class="fas fa-search-plus" onclick="editor.zoom_in()"></i>
-        </div>
+      <div class="bar-zoom">
+        <i class="fas fa-search-minus" onclick="editor.zoom_out()"></i>
+        <i class="fas fa-search" onclick="editor.zoom_reset()"></i>
+        <i class="fas fa-search-plus" onclick="editor.zoom_in()"></i>
       </div>
     </div>
   </div>
+</div>
 
-  <script src="message.js"></script>
-  <script src="nodeConfig.js"></script>
-  <script src="index.js"></script>
+<script src="message.js"></script>
+<script src="nodeConfig.js"></script>
+<script src="index.js"></script>
 </body>
 </html>

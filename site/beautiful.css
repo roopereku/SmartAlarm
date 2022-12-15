@@ -89,11 +89,11 @@ header a {
 
 .menu ul li {
   display: inline-block;
-margin-left: 10px;
-border-right: 1px solid var(--border-color);
-padding-right: 10px;
-line-height: 40px;
-cursor: pointer;
+  margin-left: 10px;
+  border-right: 1px solid var(--border-color);
+  padding-right: 10px;
+  line-height: 40px;
+  cursor: pointer;
 }
 
 .menu ul li.selected {
@@ -107,7 +107,7 @@ cursor: pointer;
   right: 10px;
   color: white;
   font-weight: bold;
-  border: 1px solid #0e5ba3;
+  border: 1px solid #12488a;
   background: #4ea9ff;
   padding: 5px 10px;
   border-radius: 4px;
@@ -119,11 +119,11 @@ cursor: pointer;
   float: right;
   position: absolute;
   top: 10px;
-  right: 167px;
+  right: 152px;
   color: white;
   font-weight: bold;
-  border: 1px solid #51980f;
-  background: #eeee00;
+  border: 1px solid #12488a;
+  background: #1a68c2;
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -134,11 +134,11 @@ cursor: pointer;
   float: right;
   position: absolute;
   top: 10px;
-  right: 90px;
+  right: 75px;
   color: white;
   font-weight: bold;
-  border: 1px solid #51980f;
-  background: #65db26;
+  border: 1px solid #12488a;
+  background: #1a68c2;
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -148,8 +148,8 @@ cursor: pointer;
 .btn-save {
   float: right;
   position: absolute;
-  top: 17.5px;
-  right: 90px;
+  top: 10px;
+  right: 10px;
   color: white;
   font-weight: bold;
   border: 1px solid #12488a;
@@ -163,8 +163,8 @@ cursor: pointer;
 .btn-dark {
   float: right;
   position: absolute;
-  top: 17.5px;
-  right: 155px;
+  top: 18px;
+  right: 157px;
   color: white;
   font-weight: bold;
   border: 1px solid #212121;
@@ -179,8 +179,8 @@ cursor: pointer;
 .btn-light {
   float: right;
   position: absolute;
-  top: 17.5px;
-  right: 155px;
+  top: 18px;
+  right: 157px;
   color: black;
   font-weight: bold;
   border: 1px solid #606060;
@@ -195,19 +195,19 @@ cursor: pointer;
 .btn-logout {
   float: right;
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 18px;
+  right: 77px;
   color: white;
   font-weight: bold;
   border: 1px solid #96015b;
-  background: #e3195a;
+  background: #ee0049;
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
   z-index: 5;
 }
 .swal-wide{
-    width:80% !important;
+  width:80% !important;
 }
 
 .btn-lock {
@@ -410,7 +410,7 @@ cursor: pointer;
   stroke: var(--border-color);
   stroke-width: 2;
   fill: white;
-  
+
 }
 
 .drawflow .connection .point.selected, .drawflow .connection .point:hover {
