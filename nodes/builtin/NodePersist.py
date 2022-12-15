@@ -45,4 +45,4 @@ class NodePersist(node_base):
         }
 
 
-node = NodePersist("persistent", 0, "control", "fa-regular fa-hourglass-half")
+node = NodePersist("persistent", 1, "control", "fa-regular fa-hourglass-half")
