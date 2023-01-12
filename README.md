@@ -1,4 +1,4 @@
-# SmartAlarm
+# Smart Alarm
 ![SmartAlarm site frontpage](https://user-images.githubusercontent.com/72491928/212164460-19a65331-410b-4540-af55-65f44a509302.png)
 
 SmartAlarm is an automation system that is highly extendable. Contrary to the project name, it is not aimed solely to be an alarm clock though it can be used as one. SmartAlarm was created as an IoT school project.
