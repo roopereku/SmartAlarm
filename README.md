@@ -1,6 +1,6 @@
 # SmartAlarm
 
-SmartAlarm is an automation system that's highly extendable. Contrary to the project name, it's not aimed solely to be an alarm clock, though it can be used as one. SmartAlarm was created as an IoT school project.
+SmartAlarm is an automation system that is highly extendable. Contrary to the project name, it is not aimed solely to be an alarm clock though it can be used as one. SmartAlarm was created as an IoT school project.
 
 ## Installation
 Make sure that you have NodeJS, NPM and Python3 installed
