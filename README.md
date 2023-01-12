@@ -26,7 +26,7 @@ TELEGRAM_TOKEN=yourtoken
 ```
 
 ## Using the website
-The server serves a website to port 3000. If you are hosting on the same computer which you are using to access the website, you can go to `http://localhost:3000`¨.
+The server serves a website to port 3000. If you are hosting on the same computer which you are using to access the website, you can go to `http://localhost:3000`.
 
 The site will prompt you for a password which is very secret (psst... It is admin). After the website has been entered, you can start drag-and-dropping nodes from the panel on the left side of the page. Once you have at least two instances of a node, you can connect them by dragging from a sphere located on the left and right corners of the instance box. 
 
