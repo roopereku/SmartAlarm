@@ -1,6 +1,7 @@
 # SmartAlarm
-
 SmartAlarm is an automation system that is highly extendable. Contrary to the project name, it is not aimed solely to be an alarm clock though it can be used as one. SmartAlarm was created as an IoT school project.
+
+SmartAlarm has various different kinds of nodes: a sensor, action and control node. The idea behind this project is that user can chain nodes together to create flowchart style event chain. For example, you could chain an ultrasonic sensor node, a day control node and an email action node. After that, you can set parameters and get email when those parameters are met.
 
 ## Installation
 Make sure that you have NodeJS, NPM and Python3 installed
